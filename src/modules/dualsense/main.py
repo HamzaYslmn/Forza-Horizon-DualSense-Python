@@ -4,8 +4,7 @@ import threading
 import time
 import zlib
 
-import pydualsense  # noqa: F401 — only for hidapi DLL path setup
-import hidapi
+import hid
 
 from .triggers import M_RIGID, off
 
@@ -24,15 +23,25 @@ BT  = {"rid": 0x31, "flags": 2, "r": 12, "l": 23, "size": 78, "bt": True}
 def _find_gamepad():
     """Pick the Game Pad HID interface (usage_page=1, usage=5).
     Audio/sensor interfaces share VID/PID and silently drop trigger writes."""
-    for d in hidapi.enumerate(vendor_id=VENDOR_ID):
-        if (d.product_id in PRODUCT_IDS
-                and getattr(d, "usage_page", 1) == 1
-                and getattr(d, "usage", 5) == 5):
+    for d in hid.enumerate(VENDOR_ID, 0):
+        if (d.get("product_id") in PRODUCT_IDS
+                and d.get("usage_page", 1) == 1
+                and d.get("usage", 5) == 5):
             return d
     raise RuntimeError(
         "DualSense gamepad interface not found. "
         "If Steam Input + HidHide is on, allowlist python.exe."
     )
+
+
+def _is_bluetooth(info):
+    bus_type = info.get("bus_type")
+    if bus_type is not None:
+        return bus_type == 2
+    path = info.get("path", b"")
+    if isinstance(path, str):
+        path = path.encode()
+    return b"BTHENUM" in path.upper()
 
 
 class DualSense:
@@ -51,11 +60,10 @@ class DualSense:
 
     def open(self):
         info = _find_gamepad()
-        self.dev = hidapi.Device(path=info.path)
-        # BT input report = 78 bytes, USB = 64. One read distinguishes them.
-        self.lay = BT if len(self.dev.read(100)) == 78 else USB
-        # Non-blocking from now on — writes shouldn't wait on input reports.
-        self.dev.nonblocking = True
+        self.dev = hid.device()
+        self.dev.open_path(info["path"])
+        self.lay = BT if _is_bluetooth(info) else USB
+        self.dev.set_nonblocking(True)
         log.info("DualSense connected (%s)", "BT" if self.lay["bt"] else "USB")
 
         self._running = True
