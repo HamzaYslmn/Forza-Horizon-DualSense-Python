@@ -22,7 +22,44 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 APP="$ROOT/app"
 VERSION_FILE="$APP/.version"
 
+# Launcher self-version. Bump this when linux_start.sh changes.
+LAUNCHER_VERSION=2
+
 need() { command -v "$1" >/dev/null 2>&1; }
+
+# --- Check if this launcher script itself is out of date ---
+open_url() {
+    if need xdg-open; then xdg-open "$1" >/dev/null 2>&1 &
+    elif need open; then open "$1" >/dev/null 2>&1 &
+    elif need wslview; then wslview "$1" >/dev/null 2>&1 &
+    fi
+}
+
+REMOTE_LAUNCHER=""
+if need curl; then
+    REMOTE_LAUNCHER=$(curl -fsSL "https://raw.githubusercontent.com/$REPO/main/linux_start.sh" 2>/dev/null \
+        | grep -E '^LAUNCHER_VERSION=' | head -n1 | sed -E 's/LAUNCHER_VERSION=([0-9]+).*/\1/')
+elif need wget; then
+    REMOTE_LAUNCHER=$(wget -qO- "https://raw.githubusercontent.com/$REPO/main/linux_start.sh" 2>/dev/null \
+        | grep -E '^LAUNCHER_VERSION=' | head -n1 | sed -E 's/LAUNCHER_VERSION=([0-9]+).*/\1/')
+fi
+
+if [ -n "$REMOTE_LAUNCHER" ] && [ "$REMOTE_LAUNCHER" != "$LAUNCHER_VERSION" ]; then
+    echo
+    echo "============================================================"
+    echo " A newer linux_start.sh is available (yours: $LAUNCHER_VERSION, latest: $REMOTE_LAUNCHER)."
+    echo " The auto-updater can refresh the app, but it cannot replace"
+    echo " this launcher script itself. Please download the new one:"
+    echo
+    echo "   https://github.com/$REPO/releases/latest"
+    echo
+    open_url "https://github.com/$REPO/releases/latest"
+    echo "============================================================"
+    echo
+    read -r -p "Press Enter to exit..." _ || true
+    trap - EXIT
+    exit 0
+fi
 
 # --- Resolve latest release tag ---
 LATEST=""

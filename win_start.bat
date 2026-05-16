@@ -9,6 +9,30 @@ set "ROOT=%~dp0"
 set "APP=%ROOT%app"
 set "VERSION_FILE=%APP%\.version"
 
+REM --- Launcher self-version. Bump this when win_start.bat changes. ---
+set "LAUNCHER_VERSION=2"
+
+REM --- Check if this launcher script itself is out of date ---
+set "REMOTE_LAUNCHER="
+for /f "usebackq delims=" %%r in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $t = (Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/%REPO%/main/win_start.bat' -Headers @{'User-Agent'='fh5ds-launcher'}).Content; if ($t -match 'LAUNCHER_VERSION=(\d+)') { $Matches[1] } } catch { '' }"`) do set "REMOTE_LAUNCHER=%%r"
+
+if not "!REMOTE_LAUNCHER!"=="" if not "!REMOTE_LAUNCHER!"=="!LAUNCHER_VERSION!" (
+    echo.
+    echo ============================================================
+    echo  A newer win_start.bat is available ^(yours: !LAUNCHER_VERSION!, latest: !REMOTE_LAUNCHER!^).
+    echo  The auto-updater can refresh the app, but it cannot replace
+    echo  this launcher script itself. Please download the new one:
+    echo.
+    echo    https://github.com/%REPO%/releases/latest
+    echo.
+    echo  Opening the releases page in your browser...
+    echo ============================================================
+    start "" "https://github.com/%REPO%/releases/latest"
+    echo.
+    pause
+    exit /b 0
+)
+
 REM --- Capture trailing args (Steam %command%) so they survive later parsing ---
 set "GAME_CMD=%*"
 
