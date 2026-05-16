@@ -59,7 +59,7 @@ class Settings:
     enable_rev_limiter: bool = True
     rev_limit_ratio: float = 0.93             # fire right at the cutoff, not across the whole upper rpm range
     rev_limit_freq: int = 20
-    rev_limit_amp: int = 1                  # mapped to firmware strength 1-8 (>=224 = max)
+    rev_limit_amp: int = 1                    # raw 0-255 byte for mode 0x06 vibration amplitude
     rev_limit_hold_ms: float = 120.0          # hold buzz this long after each trigger so the rpm bounce doesn't stutter it
 
     # Gear shift: single short vibration burst on up/downshift while moving.
@@ -75,6 +75,8 @@ class Settings:
     # Startup pulse: brief trigger buzz to confirm HID connection on launch.
     enable_startup_pulse: bool = True
     startup_pulse_force: int = 150
+
+
 
     # Reconnect interval when the controller is missing or disconnects.
     reconnect_interval_s: float = 10.0

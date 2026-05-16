@@ -17,8 +17,10 @@ PRODUCT_IDS = (0x0CE6, 0x0DF2)  # DualSense, DualSense Edge
 # Some firmware needs motor bits set for trigger bits to be processed.
 TRIG_FLAGS = 0x01 | 0x02 | 0x04 | 0x08
 
-USB = {"rid": 0x02, "flags": 1, "r": 11, "l": 22, "size": 64, "bt": False}
-BT  = {"rid": 0x31, "flags": 2, "r": 12, "l": 23, "size": 78, "bt": True}
+# MARK: Layout maps — byte offsets per transport
+# vf1 = valid_flag1, psav = power_save_control
+USB = {"rid": 0x02, "flags": 1, "vf1": 2, "psav": 10, "r": 11, "l": 22, "size": 64, "bt": False}
+BT  = {"rid": 0x31, "flags": 2, "vf1": 3, "psav": 11, "r": 12, "l": 23, "size": 78, "bt": True}
 
 
 def _find_gamepad():
@@ -129,6 +131,11 @@ class DualSense:
                 self.dev.write(self._build(off(), off()))
             except Exception:
                 pass
+        # MARK: Power saver — one-shot at connect
+        try:
+            self.dev.write(self._build_power_saver())
+        except Exception:
+            pass
         return True
 
     def _disconnect(self):
@@ -193,6 +200,19 @@ class DualSense:
             buf[pos] = mode
             for i, b in enumerate(params[:10]):
                 buf[pos + 1 + i] = b & 0xFF
+        if L["bt"]:
+            struct.pack_into("<I", buf, 74, zlib.crc32(b"\xA2" + bytes(buf[:74])))
+        return bytes(buf)
+
+    def _build_power_saver(self):
+        """Build a minimal HID report that enables the power-save flag only."""
+        L = self.lay
+        buf = bytearray(L["size"])
+        buf[0] = L["rid"]
+        if L["bt"]:
+            buf[1] = 0x02
+        buf[L["vf1"]] |= 0x02          # bit 1 = POWER_SAVE_CONTROL enable
+        buf[L["psav"]] |= 0x10         # bit 4 = hardware power save
         if L["bt"]:
             struct.pack_into("<I", buf, 74, zlib.crc32(b"\xA2" + bytes(buf[:74])))
         return bytes(buf)
