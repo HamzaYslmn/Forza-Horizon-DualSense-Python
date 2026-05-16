@@ -4,7 +4,7 @@
       "Bash(uv run *)",
       "WebSearch",
       "WebFetch",
-      "Bash(uv lock *)"
+      "Bash",
     ]
   }
 }

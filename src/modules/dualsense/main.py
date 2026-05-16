@@ -1,5 +1,6 @@
 import logging
 import struct
+import sys
 import threading
 import time
 import zlib
@@ -62,6 +63,20 @@ def _is_bluetooth(info):
     return False
 
 
+def _log_open_failure(err) -> None:
+    # hidapi's "open failed" is opaque; on Linux it almost always means the
+    # hidraw node is root-only because the udev rule isn't installed.
+    if sys.platform.startswith("linux"):
+        log.error(
+            "DualSense open failed (%s). Install the udev rule:\n"
+            "  sudo cp packaging/linux/70-dualsense.rules /etc/udev/rules.d/\n"
+            "  sudo udevadm control --reload-rules && sudo udevadm trigger\n"
+            "Then unplug/replug (USB) or re-pair (Bluetooth).", err,
+        )
+    else:
+        log.warning("DualSense open failed (%s) — another app may be holding it open.", err)
+
+
 class DualSense:
     """Triggers-only DualSense writer. Steam keeps rumble bits untouched.
 
@@ -86,6 +101,7 @@ class DualSense:
         self._enable_startup_pulse = enable_startup_pulse
         self._reconnect_interval = reconnect_interval_s
         self._connected = False
+        self._open_hinted = False
 
     @property
     def connected(self) -> bool:
@@ -117,11 +133,14 @@ class DualSense:
             dev.open_path(info["path"])
             dev.set_nonblocking(True)
         except (OSError, IOError) as e:
-            log.debug("DualSense open failed: %s", e)
+            if not self._open_hinted:
+                _log_open_failure(e)
+                self._open_hinted = True
             return False
         self.dev = dev
         self.lay = BT if _is_bluetooth(info) else USB
         self._connected = True
+        self._open_hinted = False
         log.info("DualSense connected (%s)", "BT" if self.lay["bt"] else "USB")
 
         if self._enable_startup_pulse:

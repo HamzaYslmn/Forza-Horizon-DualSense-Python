@@ -80,6 +80,17 @@ if ! need uv; then
     need uv || { echo "uv installed but not on PATH. Restart your shell or add ~/.local/bin to PATH."; exit 1; }
 fi
 
+# Linux: install the DualSense udev rule if missing (else hidapi reports "open failed").
+RULE_DST="/etc/udev/rules.d/70-dualsense.rules"
+if [ "$(uname -s)" = "Linux" ] && [ ! -f "$RULE_DST" ] && [ -f "$APP/packaging/linux/70-dualsense.rules" ]; then
+    read -r -p "Install DualSense udev rule (sudo)? [Y/n] " ans
+    case "${ans:-Y}" in [Nn]*) ;; *)
+        sudo cp "$APP/packaging/linux/70-dualsense.rules" "$RULE_DST" \
+            && sudo udevadm control --reload-rules && sudo udevadm trigger \
+            && echo "Installed. Unplug/replug (USB) or re-pair (Bluetooth)." ;;
+    esac
+fi
+
 cd "$APP/src"
 if [ "$#" -gt 0 ]; then
     echo "Launching game: $*"
