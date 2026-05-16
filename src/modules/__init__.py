@@ -1,4 +1,4 @@
-"""FH5 DualSense building blocks — DualSense HID, UDP listener, settings."""
+"""FH DualSense building blocks — DualSense HID, UDP listener, settings."""
 import logging
 import os
 

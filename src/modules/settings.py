@@ -81,7 +81,7 @@ class Settings:
     # Reconnect interval when the controller is missing or disconnects.
     reconnect_interval_s: float = 10.0
 
-    # Auto-exit when FH5 closes (Windows + Linux/Proton). Telemetry-lost is a fallback for Task Manager kills.
+    # Auto-exit when game closes (Windows + Linux/Proton). Telemetry-lost is a fallback for Task Manager kills.
     exit_on_game_close: bool = True
     game_process_name_contains: tuple = ("forza",)
     game_poll_interval_s: float = 1.0

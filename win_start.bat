@@ -1,5 +1,5 @@
 @echo off
-REM FH5 DualSense — Windows launcher. Downloads the latest release into ./app and runs it.
+REM FH DualSense — Windows launcher. Downloads the latest release into ./app and runs it.
 
 setlocal enabledelayedexpansion
 set "REPO=HamzaYslmn/Forza-Horizon-DualSense-Python"
@@ -13,7 +13,7 @@ net session >nul 2>&1 && set "IS_ADMIN=1"
 if "%IS_ADMIN%"=="1" (echo Running as administrator.) else (echo Running as standard user.)
 
 echo Checking latest release...
-for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "try { (Invoke-RestMethod -UseBasicParsing 'https://api.github.com/repos/%REPO%/releases/latest' -Headers @{'User-Agent'='fh5ds'}).tag_name } catch { '' }"`) do set "LATEST=%%v"
+for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "try { (Invoke-RestMethod -UseBasicParsing 'https://api.github.com/repos/%REPO%/releases/latest' -Headers @{'User-Agent'='fhds'}).tag_name } catch { '' }"`) do set "LATEST=%%v"
 set "SOURCE=tags"
 if "!LATEST!"=="" (
     echo No release found. Using 'main' branch.
@@ -43,7 +43,7 @@ set /p "ans=Update now? [Y/n]: "
 if /I "!ans!"=="n" goto :run
 
 :install
-set "ZIP=%~dp0fh5ds.zip"
+set "ZIP=%~dp0fhds.zip"
 set "EXTRACT=%~dp0_extract"
 echo Downloading !LATEST!...
 powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; try { Invoke-WebRequest -UseBasicParsing 'https://github.com/%REPO%/archive/refs/!SOURCE!/!LATEST!.zip' -OutFile '%ZIP%'; if (Test-Path '%EXTRACT%') { Remove-Item -Recurse -Force '%EXTRACT%' }; Expand-Archive -LiteralPath '%ZIP%' -DestinationPath '%EXTRACT%' -Force } catch { exit 1 }"
@@ -74,7 +74,7 @@ if defined GAME_CMD (echo Launching game: !GAME_CMD! & start "" !GAME_CMD!)
 set "PYTHONHOME="
 set "PYTHONPATH="
 set "PYTHONNOUSERSITE=1"
-set "FH5DS_IS_ADMIN=%IS_ADMIN%"
+set "FHDS_IS_ADMIN=%IS_ADMIN%"
 uv run main.py
 echo.
 echo App exited with code %ERRORLEVEL%.

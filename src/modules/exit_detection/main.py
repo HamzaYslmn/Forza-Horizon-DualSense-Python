@@ -1,4 +1,4 @@
-"""Exit when the FH5 process disappears. Cross-platform: Windows + Linux/Proton
+"""Exit when the Forza Horizon process disappears. Cross-platform: Windows + Linux/Proton
 (Proton runs the Windows binary, so the process name is the same on both)."""
 import logging
 import os
@@ -6,7 +6,7 @@ import time
 
 import psutil
 
-log = logging.getLogger("fh5ds")
+log = logging.getLogger("fhds")
 
 
 class ProcessWatcher:

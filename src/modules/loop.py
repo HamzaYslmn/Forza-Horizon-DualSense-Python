@@ -5,7 +5,7 @@ import time
 from modules import dualsense, udplistener
 from modules.exit_detection import ProcessWatcher
 
-log = logging.getLogger("fh5ds")
+log = logging.getLogger("fhds")
 
 
 def _max_abs(t, prefix):
@@ -35,7 +35,7 @@ def run(ds, listener, s, stop_event=None):
         if pkt is None:
             idle = now - last_pkt
             if idle > 5.0 and not getattr(listener, "lost", False):
-                log.warning("No UDP packets yet — check FH5 Data Out IP/port and Windows Firewall")
+                log.warning("No UDP packets yet — check Forza Horizon Data Out IP/port and Windows Firewall")
                 listener.lost = True
             if idle > 1.0 and prev != (OFF, OFF):
                 ds.set(OFF, OFF); prev = (OFF, OFF)

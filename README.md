@@ -4,7 +4,7 @@
 
 <div align="center">
   <h1>🏎️ Forza Horizon — DualSense Adaptive Triggers</h1>
-  <p><strong>Real, physics-driven trigger feedback for the Steam version of FH5.</strong></p>
+  <p><strong>Real, physics-driven trigger feedback for the Steam version of Forza Horizon.</strong></p>
   <p><em>Lightweight · No presets · No mode juggling · One file of knobs you can edit in 10 seconds.</em></p>
 </div>
 
@@ -34,7 +34,7 @@ Forza Horizon on PC sends rich telemetry over UDP — but Steam Input only forwa
 
 This project bridges the gap with a tiny Python service:
 
-- It reads FH5's UDP packets each frame.
+- It reads Forza Horizon's UDP packets each frame.
 - It computes a single adaptive-trigger command for each trigger.
 - It writes those commands to the DualSense via raw HID — **without touching the rumble bits**, so Steam keeps doing its job.
 
@@ -77,16 +77,16 @@ The chain lives in [TriggerAnimation._throttle()](src/modules/dualsense/triggers
 ## ⚡ How it works
 
 ```
-┌──────────────┐   UDP 5300    ┌──────────────┐   HID write    ┌─────────────┐
-│  Forza H5    │ ────────────► │  fh5ds.py    │ ─────────────► │  DualSense  │
-│  Data Out    │   324 bytes   │  per frame   │  triggers only │  controller │
-└──────────────┘               └──────────────┘                └─────────────┘
-                                      │
-                                      ▼
-                           Steam Input keeps owning rumble
+┌─────────────────┐   UDP 5300    ┌───────────────┐   HID write    ┌─────────────┐
+│  Forza Horizon  │ ────────────► │  fhds.py      │ ─────────────► │  DualSense  │
+│  Data Out       │   324 bytes   │  per frame    │  triggers only │  controller │
+└─────────────────┘               └───────────────┘                └─────────────┘
+                                        │
+                                        ▼
+                             Steam Input keeps owning rumble
 ```
 
-- **UDP listener** ([modules/udplistener/main.py](src/modules/udplistener/main.py)) parses FH5's 324-byte telemetry packet (RPM, speed, accelerator, brake, gear, drivetrain…). Each frame it **drains the socket and uses only the latest packet**, so we never react to stale telemetry if the OS queues bursts.
+- **UDP listener** ([modules/udplistener/main.py](src/modules/udplistener/main.py)) parses Forza Horizon's 324-byte telemetry packet (RPM, speed, accelerator, brake, gear, drivetrain…). Each frame it **drains the socket and uses only the latest packet**, so we never react to stale telemetry if the OS queues bursts.
 - **TriggerAnimation** ([modules/dualsense/triggers.py](src/modules/dualsense/triggers.py)) turns telemetry into a `(left, right)` tuple of trigger commands.
 - **DualSense HID layer** ([modules/dualsense/main.py](src/modules/dualsense/main.py)) writes them out, flipping only the trigger bits in `valid_flag0` so Steam's rumble bytes stay untouched. The HID device is opened in **non-blocking mode** so writes fire immediately instead of waiting for an input report (important on Bluetooth).
 
@@ -143,9 +143,9 @@ Open Forza Horizon → **Settings → HUD and Gameplay**, scroll to the bottom:
 
 Double-click `win_start.bat` (Windows) or `linux_start.sh` (Linux). For developers, from the `src/` folder: `uv run main.py`.
 
-You should hear a brief startup pulse on both triggers — that confirms HID writes are landing on the controller. After that, fire up FH5 and start driving.
+You should hear a brief startup pulse on both triggers — that confirms HID writes are landing on the controller. After that, fire up Forza Horizon and start driving.
 
-> Run the script **before or while FH5 is loading**. Steam Input must be active for the controller; if you use HidHide, allowlist `python.exe`.
+> Run the script **before or while Forza Horizon is loading**. Steam Input must be active for the controller; if you use HidHide, allowlist `python.exe`.
 
 ### Option B: Start via Steam (Auto Launch)
 You can configure Steam to launch the DualSense script automatically in the background whenever you press **Play** on Forza Horizon.
@@ -240,7 +240,7 @@ Every trigger effect has an `enable_*` switch. Set it to `False` if you do not w
 | Field | Default | Effect |
 |-------|--------:|--------|
 | `udp_host` | `"0.0.0.0"` | UDP bind address. |
-| `udp_port` | `5300` | UDP port (must match FH5). |
+| `udp_port` | `5300` | UDP port (must match Forza Horizon). |
 | `udp_timeout` | `0.5` s | Listener timeout (used to detect "no telemetry"). |
 | `enable_startup_pulse` | `True` | Toggle the short trigger pulse on app startup. |
 | `startup_pulse_force` | `150` | Strength of the connect-confirm pulse. |
@@ -268,7 +268,7 @@ src/
 | Symptom | Likely cause / fix |
 |---------|--------------------|
 | `DualSense gamepad interface not found` | Controller not connected, or HidHide is hiding it. Allowlist `python.exe` in HidHide. |
-| `No UDP packets yet` after several seconds | FH5 Data Out is off, IP/port mismatch, or Windows Firewall is blocking the bind. |
+| `No UDP packets yet` after several seconds | Forza Horizon Data Out is off, IP/port mismatch, or Windows Firewall is blocking the bind. |
 | Triggers feel weak | Increase `brake_max_force` / `throttle_max_force`, or lower the relevant `curve` for earlier resistance. Values above `pedal_full_force_at` still jump to full force (`255`). |
 | Triggers feel like a rock wall before pedal hits 100% | Lower `brake_max_force` / `throttle_max_force`, or raise the relevant `curve` so resistance arrives later. |
 | Triggers feel too stiff at light press | Lower the relevant baseline force, or raise the relevant `curve` for a softer initial press. |

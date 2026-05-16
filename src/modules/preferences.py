@@ -10,7 +10,7 @@ import logging
 import re
 from pathlib import Path
 
-log = logging.getLogger("fh5ds")
+log = logging.getLogger("fhds")
 
 PATH = Path(__file__).resolve().parent.parent / "user_preferences.json"
 PYPROJECT = Path(__file__).resolve().parent.parent / "pyproject.toml"

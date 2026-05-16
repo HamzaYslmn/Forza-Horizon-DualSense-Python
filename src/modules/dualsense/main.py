@@ -8,7 +8,7 @@ import hid
 
 from .triggers import M_RIGID, off
 
-log = logging.getLogger("fh5ds.dualsense")
+log = logging.getLogger("fhds.dualsense")
 
 VENDOR_ID = 0x054C
 PRODUCT_IDS = (0x0CE6, 0x0DF2)  # DualSense, DualSense Edge

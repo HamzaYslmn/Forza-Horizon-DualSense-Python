@@ -61,7 +61,7 @@ Forza-Horizon-DualSense-Python/
         │   └── triggers.py    # Effect primitives + per‑frame TriggerAnimation
         └── udplistener/
             ├── __init__.py    # Re‑exports UDPListener, parse_packet
-            └── main.py        # UDP socket + 324‑byte FH5 packet parser
+            └── main.py        # UDP socket + 324‑byte FH packet parser
 ```
 
 The whole codebase is **~6 small files**. Read them in this order:
@@ -130,7 +130,7 @@ Input keeps owning the rumble bytes.
   field‑by‑field meaning.
 
 ### `src/modules/udplistener/main.py`
-- `parse_packet(p)`: unpacks the 324‑byte FH5 telemetry into a dict
+- `parse_packet(p)`: unpacks the 324‑byte FH telemetry into a dict
   (RPM, accel, brake, gear, speed in km/h, four‑wheel slip values, etc.).
   Format follows Forza Motorsport's "Data Out" spec.
 - `UDPListener` (context manager): binds a UDP socket with a tiny receive
@@ -183,7 +183,7 @@ uv run main.py    # runs the service
 | trailing args | Optional game command — service exits when game exits (Steam wrapper mode) |
 
 ### In‑game setup (must do once)
-FH5 → **Settings → HUD and Gameplay → Data Out: ON**, IP `127.0.0.1`,
+Forza Horizon → **Settings → HUD and Gameplay → Data Out: ON**, IP `127.0.0.1`,
 Port `5300`. See README screenshots in `img/`.
 
 A short pulse on both triggers at startup confirms HID writes are landing.
@@ -238,7 +238,7 @@ a third entry and pick it in `_find_gamepad` / `_is_bluetooth`.
 | Symptom | Cause / fix |
 |---|---|
 | `DualSense gamepad interface not found` | Controller not connected, or HidHide hides it — allowlist `python.exe`. |
-| `No UDP packets yet` after a few seconds | FH5 Data Out off, IP/port mismatch, or Windows Firewall blocking. |
+| `No UDP packets yet` after a few seconds | Forza Horizon Data Out off, IP/port mismatch, or Windows Firewall blocking. |
 | Triggers feel weak | Raise `brake_max_force` / `throttle_max_force`, or lower the relevant `*_curve`. |
 | Triggers feel like a wall | Lower `*_max_force`, or raise `*_curve` so resistance arrives later. |
 | "Machine‑gun" buzzing near deadzone | The baseline force prevents it; if it returns, raise `*_baseline_force` or `*_deadzone`. |

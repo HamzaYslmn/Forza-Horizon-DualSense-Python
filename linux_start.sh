@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FH5 DualSense — Linux/macOS launcher. Downloads the latest release into ./app and runs it.
+# FH DualSense — Linux/macOS launcher. Downloads the latest release into ./app and runs it.
 set -e
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -32,7 +32,7 @@ fi
 
 install_release() {
     local tag="$1" kind="$2"
-    local zip="$ROOT/fh5ds.zip" extract="$ROOT/_extract"
+    local zip="$ROOT/fhds.zip" extract="$ROOT/_extract"
     echo "Downloading $tag..."
     if ! fetch "https://github.com/$REPO/archive/refs/$kind/$tag.zip" > "$zip"; then
         echo

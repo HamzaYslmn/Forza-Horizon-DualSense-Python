@@ -10,7 +10,7 @@ from modules import preferences
 from modules.settings import Settings
 from modules.update_check import log_latest_commit_age
 
-log = logging.getLogger("fh5ds")
+log = logging.getLogger("fhds")
 
 # MARK: Crash log — only written on unhandled exceptions
 CRASH_LOG = Path(__file__).resolve().parent / "crash.log"
@@ -39,7 +39,7 @@ def run(s: Settings) -> None:
     try:
         with udplistener.UDPListener(s.udp_host, s.udp_port, s.udp_timeout) as listener:
             log.info("Listening on %s:%d | Ctrl+C to quit", s.udp_host, s.udp_port)
-            log.info("  In FH5: HUD & Gameplay -> Data Out: ON, IP 127.0.0.1, Port %d", s.udp_port)
+            log.info("  In game: HUD & Gameplay -> Data Out: ON, IP 127.0.0.1, Port %d", s.udp_port)
             loop.run(ds, listener, s)
     finally:
         ds.close()
@@ -52,7 +52,7 @@ def run_tui(s: Settings) -> None:
 
 # MARK: Entry point
 if __name__ == "__main__":
-    p = argparse.ArgumentParser(description="FH5 DualSense adaptive triggers (Steam keeps rumble)")
+    p = argparse.ArgumentParser(description="FH DualSense adaptive triggers (Steam keeps rumble)")
     p.add_argument("--host", default="127.0.0.1", help="UDP bind address")
     p.add_argument("--port", type=int, default=None, help="UDP port")
     p.add_argument("--debug", action="store_true", help="Verbose per-packet logs")

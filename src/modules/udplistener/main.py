@@ -1,6 +1,6 @@
 """UDP listener for Forza Horizon telemetry.
 
-Packet = 324 bytes; offsets verified against FH5 Data Out spec.
+Packet = 324 bytes; offsets verified against FH Data Out spec.
 Always returns the *latest* packet (drains queued ones) so we never react
 to stale telemetry.
 """
@@ -8,7 +8,7 @@ import logging
 import socket
 import struct
 
-log = logging.getLogger("fh5ds.udp")
+log = logging.getLogger("fhds.udp")
 
 
 def parse_packet(p: bytes) -> dict:

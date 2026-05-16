@@ -161,7 +161,7 @@ def throttle_ramp(t, s):
 # --- Priority chains ------------------------------------------------------
 
 class TriggerAnimation:
-    """Computes (left, right) trigger output from FH5 telemetry each frame."""
+    """Computes (left, right) trigger output from Forza Horizon telemetry each frame."""
 
     def __init__(self, settings):
         self._prev_gear = 0

@@ -35,7 +35,7 @@ HAPTIC_DURATION_S = 0.10
 LOG_LEVELS = ("WARNING", "INFO", "DEBUG")
 DEFAULT_LOG_LEVEL = "INFO"
 
-log = logging.getLogger("fh5ds")
+log = logging.getLogger("fhds")
 
 L2_TOGGLES = [
     ("enable_brake_resistance", "Brake resistance"),
@@ -223,7 +223,7 @@ class TriggerTUI(App):
         yield Footer()
 
     def on_mount(self):
-        self.title = "FH5 DualSense"
+        self.title = "FH DualSense"
         self.sub_title = f"UDP {self.settings.udp_host}:{self.settings.udp_port}"
 
         root = logging.getLogger()
@@ -251,7 +251,7 @@ class TriggerTUI(App):
             self._listener_cm = udplistener.UDPListener(s.udp_host, s.udp_port, s.udp_timeout)
             self._listener = self._listener_cm.__enter__()
             log.info("Listening on %s:%d", s.udp_host, s.udp_port)
-            log.info("In FH5: HUD & Gameplay -> Data Out: ON, IP %s, Port %d", s.udp_host, s.udp_port)
+            log.info("In game: HUD & Gameplay -> Data Out: ON, IP %s, Port %d", s.udp_host, s.udp_port)
             self._thread = threading.Thread(target=self._run_loop, daemon=True)
             self._thread.start()
         except Exception as exc:

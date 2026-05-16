@@ -5,7 +5,7 @@ import threading
 import urllib.request
 from pathlib import Path
 
-log = logging.getLogger("fh5ds")
+log = logging.getLogger("fhds")
 
 REPO = "HamzaYslmn/Forza-Horizon-DualSense-Python"
 API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
@@ -23,7 +23,7 @@ def _local_version() -> str | None:
 
 def _check(timeout: float) -> None:
     try:
-        req = urllib.request.Request(API_URL, headers={"User-Agent": "fh5ds"})
+        req = urllib.request.Request(API_URL, headers={"User-Agent": "fhds"})
         with urllib.request.urlopen(req, timeout=timeout) as r:
             latest = json.loads(r.read().decode()).get("tag_name")
     except Exception as e:
