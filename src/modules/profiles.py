@@ -57,8 +57,11 @@ def _validate_name(name: str) -> str:
     """Return the cleaned name or raise `InvalidProfileName`.
 
     Centralizes every rule so the GUI / CLI / migration code can't drift.
+    Also strips trailing dots and spaces — Windows silently removes them
+    from filenames, so "foo." would round-trip as "foo" and break delete-
+    by-original-name.
     """
-    cleaned = (name or "").strip()
+    cleaned = (name or "").strip().rstrip(" .")
     if not cleaned:
         raise InvalidProfileName("name must not be empty")
     if len(cleaned) > MAX_NAME_LEN:
@@ -66,7 +69,7 @@ def _validate_name(name: str) -> str:
     if cleaned.startswith("."):
         raise InvalidProfileName("name must not start with '.'")
     if _INVALID_CHARS.search(cleaned):
-        raise InvalidProfileName(r"name must not contain control chars or any of: \ / : * ? \" < > |")
+        raise InvalidProfileName('name must not contain control chars or any of: \\ / : * ? " < > |')
     if cleaned.upper() in _WIN_RESERVED:
         raise InvalidProfileName(f"name '{cleaned}' is reserved on Windows")
     return cleaned
@@ -133,18 +136,27 @@ def load(name: str, settings) -> None:
     Unknown keys in the file are ignored; missing keys fall back to the
     dataclass default (already on `settings` because the caller constructs
     `Settings()` before calling us).
+
+    Builds the full set of new values first, then applies them via a single
+    `vars(settings).update(...)`. This compresses N Python-level `setattr`
+    calls into one C-level dict update, narrowing (though not eliminating)
+    the window during which the per-frame loop thread could observe a mixed
+    state across paired fields like `brake_wall_engage_at` /
+    `brake_wall_release_at`.
     """
     name = _validate_name(name)
     data = _read_json(_profile_path(name))
     if data is None:
         log.info("Profile '%s' has no file yet; using current defaults.", name)
         return
+    new_values: dict = {}
     for key, current in _fields(settings).items():
         if key in data:
             try:
-                setattr(settings, key, type(current)(data[key]))
+                new_values[key] = type(current)(data[key])
             except (TypeError, ValueError):
                 pass
+    vars(settings).update(new_values)
 
 
 def save(name: str, settings) -> None:
@@ -207,8 +219,17 @@ def load_or_migrate(settings, requested: str | None = None) -> str:
 
     Returns the name of the profile that was loaded.
     """
-    _migrate_legacy_if_needed(settings)
-    name = _validate_name(requested) if requested else active_name()
+    migrated = _migrate_legacy_if_needed(settings)
+    if requested:
+        name = _validate_name(requested)
+        # If migration just happened, `settings` is holding legacy values that
+        # were already saved into `default.json`. A user passing --profile NAME
+        # wants NAME to start from dataclass defaults, not inherit the legacy
+        # state — so reset before loading/creating NAME.
+        if migrated and name != DEFAULT_NAME:
+            _reset_simple_fields(settings)
+    else:
+        name = active_name()
     if not _profile_path(name).exists():
         # Either first-time use, or the user asked for a not-yet-saved profile
         # via --profile. Materialize a file from current Settings so the row
@@ -220,30 +241,47 @@ def load_or_migrate(settings, requested: str | None = None) -> str:
     return name
 
 
+def _reset_simple_fields(settings) -> None:
+    """In-place reset of every simple-typed field on `settings` to its
+    dataclass default. Used by migration to keep `--profile NAME` independent
+    of legacy data that's already been stored under `default`."""
+    defaults = type(settings)()
+    new_values = {
+        k: getattr(defaults, k)
+        for k, v in vars(defaults).items() if isinstance(v, _SIMPLE)
+    }
+    vars(settings).update(new_values)
+
+
 # ---- Internals -----------------------------------------------------------
 def _fields(s) -> dict:
     return {k: v for k, v in vars(s).items() if isinstance(v, _SIMPLE)}
 
 
-def _migrate_legacy_if_needed(settings) -> None:
+def _migrate_legacy_if_needed(settings) -> bool:
+    """Run the one-time `user_preferences.json` → `profiles/default.json`
+    migration if it's needed. Returns True iff migration actually wrote
+    legacy values into `settings`."""
     if ROOT.is_dir():
-        return
+        return False
     if not LEGACY_PREFERENCES.exists():
         # Nothing to migrate; just seed `default.json` from current Settings.
         save(DEFAULT_NAME, settings)
         set_active(DEFAULT_NAME)
-        return
+        return False
     log.info("Migrating %s -> profiles/default.json", LEGACY_PREFERENCES.name)
     # Read the legacy file directly (rather than delegating to preferences.load)
     # so the migration can't be silently wiped by the old version-gated reset.
     # Profiles represent user labor — preserve it across this one-time step.
     data = _read_json(LEGACY_PREFERENCES) or {}
+    new_values: dict = {}
     for key, current in _fields(settings).items():
         if key in data:
             try:
-                setattr(settings, key, type(current)(data[key]))
+                new_values[key] = type(current)(data[key])
             except (TypeError, ValueError):
                 pass
+    vars(settings).update(new_values)
     save(DEFAULT_NAME, settings)
     set_active(DEFAULT_NAME)
     try:
@@ -251,6 +289,7 @@ def _migrate_legacy_if_needed(settings) -> None:
         log.info("Old preferences file kept as %s", LEGACY_BACKUP.name)
     except OSError as e:
         log.warning("Could not move legacy preferences aside: %s", e)
+    return True
 
 
 # ---- Convenience for callers --------------------------------------------

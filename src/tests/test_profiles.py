@@ -50,6 +50,22 @@ class TestValidateName:
         with pytest.raises(profiles.InvalidProfileName):
             profiles._validate_name(".hidden")
 
+    @pytest.mark.parametrize("raw,expected", [
+        ("Sport.", "Sport"),       # Windows silently strips trailing dot
+        ("Sport ", "Sport"),       # already handled by .strip(), but verify
+        ("Sport . . ", "Sport"),
+        ("Sport...", "Sport"),
+    ])
+    def test_strips_trailing_dots_and_spaces(self, isolated_profiles, raw, expected):
+        profiles = isolated_profiles["profiles"]
+        assert profiles._validate_name(raw) == expected
+
+    @pytest.mark.parametrize("only_junk", [".", "..", "...", " . ", " .. "])
+    def test_rejects_dots_and_spaces_only(self, isolated_profiles, only_junk):
+        profiles = isolated_profiles["profiles"]
+        with pytest.raises(profiles.InvalidProfileName):
+            profiles._validate_name(only_junk)
+
     @pytest.mark.parametrize("reserved", ["CON", "PRN", "aux", "NUL", "COM1", "LPT9"])
     def test_rejects_windows_reserved(self, isolated_profiles, reserved):
         profiles = isolated_profiles["profiles"]
@@ -247,6 +263,40 @@ class TestMigration:
         profiles.load_or_migrate(s)
         assert s.brake_max_force == 99  # from default.json, not legacy
         assert isolated_profiles["legacy"].exists()  # untouched
+
+    def test_migration_plus_requested_does_not_taint_named_profile(self, isolated_profiles):
+        """When migration fires AND --profile NAME is given simultaneously,
+        the named profile must start from dataclass defaults — not inherit
+        the legacy values that just landed in `default`."""
+        profiles = isolated_profiles["profiles"]
+        isolated_profiles["legacy"].write_text(json.dumps({"brake_max_force": 200}))
+
+        s = Settings()
+        name = profiles.load_or_migrate(s, requested="Sport")
+
+        assert name == "Sport"
+        # Sport.json holds dataclass defaults, NOT the migrated 200
+        sport_data = json.loads((isolated_profiles["root"] / "Sport.json").read_text())
+        assert sport_data["brake_max_force"] == 60
+        # default.json holds the migrated legacy value
+        default_data = json.loads((isolated_profiles["root"] / "default.json").read_text())
+        assert default_data["brake_max_force"] == 200
+        # In-memory `s` reflects what's actually loaded (Sport's defaults)
+        assert s.brake_max_force == 60
+
+    def test_migration_plus_requested_default_preserves_legacy(self, isolated_profiles):
+        """Migration + `--profile default` is the same as plain migration:
+        the legacy values land in default and are visible in `s`."""
+        profiles = isolated_profiles["profiles"]
+        isolated_profiles["legacy"].write_text(json.dumps({"brake_max_force": 200}))
+
+        s = Settings()
+        name = profiles.load_or_migrate(s, requested="default")
+
+        assert name == "default"
+        default_data = json.loads((isolated_profiles["root"] / "default.json").read_text())
+        assert default_data["brake_max_force"] == 200
+        assert s.brake_max_force == 200
 
 
 # ---- Edge cases ---------------------------------------------------------

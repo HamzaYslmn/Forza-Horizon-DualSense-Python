@@ -27,7 +27,7 @@ import customtkinter as ctk
 
 from modules import profiles
 from modules.gui.backend import BackendController
-from modules.gui.labels import STARTUP_HINT
+from modules.gui.labels import SECTIONS, STARTUP_HINT
 from modules.gui.profile_bar import ProfileBar
 from modules.gui.tabs import build_controls_tab, build_settings_tab, coerce_clamp
 from modules.gui.tray import Status as TrayStatus, TrayController
@@ -522,19 +522,22 @@ class TriggerGUI:
     def _on_reset(self) -> None:
         # Reset mutates `self.settings` to dataclass defaults; the active
         # profile's file is also rewritten so the new defaults persist.
-        # If the Settings tab hasn't been built yet, the entry vars are
-        # absent — settings still reset; values land when the tab is opened.
+        # Reset every tracked attr in a single dict.update so the per-frame
+        # loop thread doesn't observe a mid-reset state where (say) the new
+        # brake_max_force is paired with the old brake_curve. Window is
+        # microseconds vs millis with N individual setattr calls.
+        # Walk both widget-backed vars AND every FieldSpec attr so an
+        # un-built Settings tab still gets its eventual values reset on disk.
         defaults = Settings()
-        for attr in list(self._switch_vars) + list(self._entry_vars):
-            if hasattr(defaults, attr):
-                setattr(self.settings, attr, getattr(defaults, attr))
-        # Always also reset every FieldSpec attr so an un-built Settings tab
-        # still gets its eventual values reset on disk.
-        from modules.gui.labels import SECTIONS
+        targets: set[str] = set(self._switch_vars) | set(self._entry_vars)
         for _, fields in SECTIONS:
             for spec in fields:
-                if hasattr(defaults, spec.attr):
-                    setattr(self.settings, spec.attr, getattr(defaults, spec.attr))
+                targets.add(spec.attr)
+        new_values = {
+            attr: getattr(defaults, attr)
+            for attr in targets if hasattr(defaults, attr)
+        }
+        vars(self.settings).update(new_values)
         profiles.save_active(self.settings)
         self._refresh_input_widgets()
         log.info("Settings reset to defaults.")
