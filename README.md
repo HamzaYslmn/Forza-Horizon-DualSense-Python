@@ -167,6 +167,10 @@ If you've opted in to the **`--gui`** window, the same tunables are on the Setti
 
 The top bar has a profile picker. Use **Save As…** to create a named preset (e.g. *Stock*, *Stiff Brake*, *Sport*), switch between presets with the dropdown, and **Save** to overwrite the current one. The active profile is remembered between launches; you can also load a specific one from the command line with `--profile "Sport"`. Profile files live in `app/src/profiles/` — one JSON per profile, easy to back up or share with a friend.
 
+### 🪟 System tray
+
+By default the window minimizes to a tray icon when you click the X — handy when the app is auto-launched with Steam. The tray menu has **Show window**, **Pause effects**, and **Quit**. Closing from the dedicated **Quit** button (bottom-right) always exits. To always exit on X-close instead, untoggle the in-app **Minimize to tray on close** option (or edit `minimize_to_tray` in the active profile JSON). On Linux the tray needs an AppIndicator-compatible status notifier; if it can't initialize, the app silently falls back to "X always quits".
+
 > ⚠️ The rev limiter fires based on `rpm / max_rpm`, not a fixed RPM. Different cars hit redline at different ratios, so it may need per-car tweaking.
 
 ---

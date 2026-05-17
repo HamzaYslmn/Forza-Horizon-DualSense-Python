@@ -8,6 +8,8 @@ dependencies = [
     "hidapi>=0.15.0",
     "psutil>=7.2.2",
     "customtkinter>=5.2,<6",
+    "pystray>=0.19",
+    "pillow>=10",
 ]
 
 [dependency-groups]

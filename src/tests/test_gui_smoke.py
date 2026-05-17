@@ -37,7 +37,7 @@ def test_full_gui_flow(isolated_profiles, display_required):
         _pump(gui, ticks=5)
 
         # ---- Construction --------------------------------------------------
-        assert len(gui._switch_vars) == 7, "expected 7 toggle switches"
+        assert len(gui._switch_vars) == 8, "expected 8 toggle switches"
         assert len(gui._entry_vars) == 28, "expected 28 numeric entries"
 
         # One HelpButton per control
@@ -101,7 +101,7 @@ def test_full_gui_flow(isolated_profiles, display_required):
         data = json.loads(default_path.read_text())
         assert data["brake_max_force"] == 60
     finally:
-        gui._on_close()
+        gui._quit()
 
 
 # ---- Helpers ------------------------------------------------------------

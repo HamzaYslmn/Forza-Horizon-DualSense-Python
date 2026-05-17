@@ -38,6 +38,8 @@ class ToggleSpec:
 
 
 # ---- Controls tab (boolean switches) -------------------------------------
+# Brake (L2) and Throttle (R2) columns of effect switches, plus a Window
+# column for app-wide behavior (tray, etc).
 TOGGLE_GROUPS: list[tuple[str, list[ToggleSpec]]] = [
     ("Brake (L2)", [
         ToggleSpec(
@@ -95,6 +97,16 @@ TOGGLE_GROUPS: list[tuple[str, list[ToggleSpec]]] = [
             "• ON: feel each shift through the throttle trigger.\n"
             "• OFF: no shift feedback on R2 (L2 still gets it if 'Shift thump on brake' is on).\n\n"
             "(field: enable_gear_shift)"
+        ),
+    ]),
+    ("Window", [
+        ToggleSpec(
+            "minimize_to_tray", "Minimize to tray on close",
+            "Controls what the window's X button does.\n\n"
+            "• ON: clicking X hides the window to a tray icon. The app stays running, your triggers keep working, and you re-open from the tray.\n"
+            "• OFF: clicking X quits the app entirely.\n\n"
+            "Auto-disabled if the tray can't initialize on your desktop. The 'Quit' button at the bottom-right always quits regardless of this setting.\n\n"
+            "(field: minimize_to_tray)"
         ),
     ]),
 ]

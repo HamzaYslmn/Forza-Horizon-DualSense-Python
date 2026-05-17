@@ -30,6 +30,7 @@ from modules.gui.backend import BackendController
 from modules.gui.labels import STARTUP_HINT
 from modules.gui.profile_bar import ProfileBar
 from modules.gui.tabs import build_controls_tab, build_settings_tab, coerce_clamp
+from modules.gui.tray import Status as TrayStatus, TrayController
 from modules.gui.widgets import LogHandler, LogTextbox, safe_after_cancel, safe_destroy
 from modules.preferences import _version
 from modules.settings import Settings
@@ -64,12 +65,14 @@ class TriggerGUI:
         self.settings = settings
         self.backend = BackendController(settings)
         self.backend.on_loop_exit = self._on_loop_exit
+        self.tray: TrayController | None = None
 
         self._paused = False
         self._level_idx = LOG_LEVELS.index(DEFAULT_LOG_LEVEL)
         self._log_handler: LogHandler | None = None
         self._status_timer: str | None = None
         self._teardown_done = False
+        self._quit_requested = False
 
         # Tk variables backing each input — passed to the reset action so it
         # can refresh every widget after `preferences.reset()`.
@@ -139,6 +142,7 @@ class TriggerGUI:
     # MARK: Startup -----------------------------------------------------------
     def _on_start(self) -> None:
         self._attach_log_handler()
+        self._start_tray_if_enabled()
         self._refresh_status()
         self._status_timer = self.root.after(STATUS_REFRESH_MS, self._tick_status)
         log_latest_commit_age()
@@ -146,6 +150,22 @@ class TriggerGUI:
         # Defer the backend by another tick so the first status repaint runs
         # before the HID open call (which can take ~200 ms on a cold connect).
         self.root.after(BACKEND_START_DELAY_MS, self._start_backend)
+
+    def _start_tray_if_enabled(self) -> None:
+        if not self.settings.minimize_to_tray:
+            return
+        self.tray = TrayController(
+            marshal=self._marshal_to_ui,
+            on_show=self._show_window,
+            on_quit=self._quit_from_tray,
+            on_toggle_pause=self._toggle_effects_from_tray,
+        )
+        if not self.tray.start():
+            self.tray = None
+            # Persist the disabled state so the next launch doesn't try again
+            # in environments where we know it won't work.
+            self.settings.minimize_to_tray = False
+            profiles.save_active(self.settings)
 
     def _start_backend(self) -> None:
         if not self.backend.start():
@@ -163,33 +183,86 @@ class TriggerGUI:
 
     # MARK: Shutdown ----------------------------------------------------------
     def _on_close(self) -> None:
+        """Window X clicked. Hide to tray if enabled; otherwise quit."""
+        if self.tray is not None and not self._quit_requested:
+            self._hide_window()
+            return
+        self._quit()
+
+    def _quit(self) -> None:
+        """Full app shutdown: tear down everything and destroy the window."""
+        self._quit_requested = True
         self._teardown()
         safe_destroy(self.root)
 
     def _on_loop_exit(self) -> None:
-        """Backend exited on its own (game closed, telemetry-lost). Close the
-        window from the UI thread so destroy runs in the right place."""
+        """Backend exited on its own (game closed, telemetry-lost). Quit."""
         try:
-            self.root.after(0, self._on_close)
+            self.root.after(0, self._quit)
         except (RuntimeError, tk.TclError):
             pass
 
     def _teardown(self) -> None:
-        # Order: cancel UI timers → detach log handler → drain → stop backend.
-        # Detaching the handler before the backend stops means shutdown log
-        # records from the backend hit a no-op deque instead of a destroyed
-        # widget.
+        # Order: cancel UI timers → stop tray → detach log handler → stop log
+        # drain → stop backend. Detaching the handler before the backend stops
+        # means shutdown log records from the backend hit a no-op deque
+        # instead of a destroyed widget.
         if self._teardown_done:
             return
         self._teardown_done = True
         safe_after_cancel(self.root, self._status_timer)
         self._status_timer = None
+        if self.tray is not None:
+            self.tray.stop()
+            self.tray = None
         self._detach_log_handler()
         try:
             self.log_box.stop()
         except (tk.TclError, AttributeError):
             pass
         self.backend.stop()
+
+    # MARK: Tray actions (marshaled into the UI thread) -----------------------
+    def _marshal_to_ui(self, action) -> None:
+        """Route an action onto the Tk event loop. Safe from any thread."""
+        try:
+            self.root.after(0, action)
+        except (RuntimeError, tk.TclError):
+            pass
+
+    def _hide_window(self) -> None:
+        try:
+            self.root.withdraw()
+        except tk.TclError:
+            pass
+
+    def _show_window(self) -> None:
+        try:
+            self.root.deiconify()
+            self.root.lift()
+            self.root.focus_force()
+        except tk.TclError:
+            pass
+
+    def _quit_from_tray(self) -> None:
+        self._quit()
+
+    def _toggle_effects_from_tray(self) -> None:
+        """Pause/resume both trigger effects via the brake/throttle switches.
+
+        Goes through `_on_switch_toggled` so the value is persisted into the
+        active profile and the switch UI stays consistent with reality.
+        """
+        # Use brake as the source of truth; both move together.
+        current = bool(self.settings.enable_brake_resistance)
+        new = not current
+        for attr in ("enable_brake_resistance", "enable_throttle_resistance"):
+            var = self._switch_vars.get(attr)
+            if var is not None:
+                var.set(new)
+            self._on_switch_toggled(attr, new)
+        if self.tray is not None:
+            self.tray.set_paused(not new)
 
     def _detach_log_handler(self) -> None:
         if self._log_handler is None:
@@ -222,8 +295,10 @@ class TriggerGUI:
     def _build_bottom_bar(self) -> None:
         bar = ctk.CTkFrame(self.root, height=40, corner_radius=0)
         bar.pack(side="bottom", fill="x")
+        # Quit button bypasses tray-hide: clicking the X may minimize-to-tray,
+        # but the explicit Quit button always means quit.
         ctk.CTkButton(bar, text="Quit  (Q)", width=90,
-                      command=self._on_close).pack(side="right", padx=4, pady=4)
+                      command=self._quit).pack(side="right", padx=4, pady=4)
         self.pause_btn = ctk.CTkButton(
             bar, text=self._pause_btn_text(), width=140,
             command=self._toggle_pause,
@@ -294,6 +369,16 @@ class TriggerGUI:
             self.status_label.configure(text=text)
         except tk.TclError:
             pass
+        if self.tray is not None:
+            if self.backend.startup_error is not None:
+                tray_status = TrayStatus.ERROR
+            elif not self.settings.enable_brake_resistance and not self.settings.enable_throttle_resistance:
+                tray_status = TrayStatus.PAUSED
+            elif connected:
+                tray_status = TrayStatus.RUNNING
+            else:
+                tray_status = TrayStatus.WAITING
+            self.tray.set_status(tray_status)
 
     # MARK: Actions -----------------------------------------------------------
     def _current_level(self) -> int:

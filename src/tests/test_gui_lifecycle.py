@@ -22,14 +22,17 @@ def test_lifecycle(isolated_profiles, display_required):
     gui = TriggerGUI(s)
 
     gui.root.after(0, gui._on_start)
-    gui.root.after(500, gui._on_close)
+    gui.root.after(500, gui._quit)
 
     start = time.monotonic()
     gui.root.mainloop()
     elapsed = time.monotonic() - start
     assert elapsed < 5.0, f"mainloop took {elapsed:.2f}s — expected exit within 5s"
-    assert gui._teardown_done, "teardown should have run during close"
+    assert gui._teardown_done, "teardown should have run during _quit"
 
-    # Second close is a no-op
-    gui._on_close()
+    # Second quit is a no-op
+    gui._quit()
     assert gui._teardown_done
+
+    # Tray cleaned up
+    assert gui.tray is None, "tray reference should be cleared during teardown"
