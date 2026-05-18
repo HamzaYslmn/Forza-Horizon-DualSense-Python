@@ -56,17 +56,10 @@ if errorlevel 1 (
     if not exist "%APP%\src\main.py" (pause & exit /b 1)
     goto :run
 )
-set "PREFS_SRC=%APP%\src\user_preferences.json"
-set "PREFS_BAK=%~dp0user_preferences.json.bak"
-if exist "%PREFS_SRC%" copy /y "%PREFS_SRC%" "%PREFS_BAK%" >nul
 if exist "%APP%" rmdir /s /q "%APP%"
 for /d %%d in ("%EXTRACT%\*") do move "%%d" "%APP%" >nul
 rmdir /s /q "%EXTRACT%"
 del "%ZIP%"
-if exist "%PREFS_BAK%" (
-    move /y "%PREFS_BAK%" "%PREFS_SRC%" >nul
-    echo Preserved user_preferences.json.
-)
 echo Installed !LATEST!.
 
 :run

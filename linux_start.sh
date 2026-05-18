@@ -47,16 +47,9 @@ install_release() {
     if need unzip; then unzip -q "$zip" -d "$extract"
     else python3 -c "import zipfile,sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" "$zip" "$extract"
     fi
-    local prefs_src="$APP/src/user_preferences.json"
-    local prefs_bak="$ROOT/user_preferences.json.bak"
-    [ -f "$prefs_src" ] && cp -f "$prefs_src" "$prefs_bak"
     rm -rf "$APP"
     mv "$extract"/*/ "$APP"
     rm -rf "$extract" "$zip"
-    if [ -f "$prefs_bak" ]; then
-        mv -f "$prefs_bak" "$prefs_src"
-        echo "Preserved user_preferences.json."
-    fi
     echo "Installed $tag."
 }
 
