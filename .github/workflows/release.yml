@@ -2,8 +2,14 @@ name: release
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      dev:
+        description: "Build & publish the rolling dev prerelease (from current branch)."
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -30,7 +36,7 @@ jobs:
             echo "prerelease=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if [[ "$GITHUB_REF" == "refs/heads/dev" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dev }}" == "true" ]]; then
             echo "tag=${DEV_TAG}" >> "$GITHUB_OUTPUT"
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
             exit 0
