@@ -5,6 +5,7 @@
 </div>
 
 > My Steam profile: <https://steamcommunity.com/id/teccno/>
+> 
 > For CS:GO item Sponsorship :D : <https://steamcommunity.com/tradeoffer/new/?partner=291638630&token=Xyg4vITU>
 
 ![TUI Screenshot](img/tui.png)
