@@ -50,6 +50,11 @@ if errorlevel 1 (
 REM Optional Steam wrapper: pass game cmd (e.g. start "" steam://rungameid/1551360)
 if defined GAME start "" %GAME%
 
+REM Don't let host Python env leak into the bundled venv.
+set "PYTHONHOME="
+set "PYTHONPATH="
+set "PYTHONNOUSERSITE=1"
+
 uv run "%BUNDLE%" %FLAGS%
 endlocal
 exit /b %ERRORLEVEL%

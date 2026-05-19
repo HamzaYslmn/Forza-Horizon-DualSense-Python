@@ -64,4 +64,8 @@ fi
 
 [ ${#GAME[@]} -gt 0 ] && "${GAME[@]}" &
 
+# Don't let host Python env leak into the bundled venv.
+unset PYTHONHOME PYTHONPATH
+export PYTHONNOUSERSITE=1
+
 exec uv run "$BUNDLE" "${FLAGS[@]}"

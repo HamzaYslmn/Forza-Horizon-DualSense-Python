@@ -133,18 +133,17 @@ class DualSense:
 
     def open(self):
         """Start the I/O thread. Never raises if the controller is absent."""
-        hidhide.ensure_whitelisted()
-        if hidhide.is_detected() and not hidhide.is_whitelisted():
-            self._persistent = True
+        log.info("HidHide: %s", "detected" if hidhide.is_detected() else "not detected")
         self._log_reconnect_mode()
         self._running = True
         self._thread = threading.Thread(target=self._io, daemon=True)
         self._thread.start()
 
     def _log_reconnect_mode(self) -> None:
-        if self._persistent:
-            log.info("Reconnect mode: persistent (HidHide handle-keep; "
-                     "initial connect retries every %.0fs)", self._reconnect_interval)
+        if hidhide.is_detected():
+            log.info("HidHide detected - persistent mode will engage after first connect "
+                     "(reconnect setting bypassed; initial connect retries every %.0fs)",
+                     self._reconnect_interval)
         elif self._enable_reconnect:
             log.info("Reconnect mode: auto-reconnect every %.0fs after drops",
                      self._reconnect_interval)
@@ -201,10 +200,31 @@ class DualSense:
 
     # MARK: connect / disconnect helpers
     def _try_connect(self) -> bool:
+        devices = _enumerate_dualsenses()
+        # Log enumeration deltas so we can see if the OS hides/exposes the device.
+        n = len(devices)
+        if n != getattr(self, "_last_enum_count", -1):
+            self._last_enum_count = n
+            if n == 0:
+                log.info("HID enumerate: 0 DualSense interfaces visible "
+                         "(controller off, cable loose, or hidden by HidHide/Steam Input).")
+            else:
+                summary = ", ".join(
+                    f"[pid=0x{d.get('product_id', 0):04x} "
+                    f"up={d.get('usage_page')} u={d.get('usage')} "
+                    f"bus={d.get('bus_type')}]"
+                    for d in devices
+                )
+                log.info("HID enumerate: %d DualSense interface(s): %s", n, summary)
+
         info = _find_gamepad()
         if not info:
+            if devices and not self._waiting_hinted:
+                log.warning("DualSense interfaces present but none is the Game Pad "
+                            "(usage_page=1, usage=5). Sensor/audio interfaces don't accept "
+                            "trigger writes. Reconnect the controller.")
             if not self._waiting_hinted:
-                log.info("Waiting for DualSense — retrying every %.0fs", self._reconnect_interval)
+                log.info("Waiting for DualSense - retrying every %.0fs", self._reconnect_interval)
                 self._waiting_hinted = True
             return False
         try:
@@ -214,6 +234,9 @@ class DualSense:
         except (OSError, IOError) as e:
             if not self._open_hinted:
                 _log_open_failure(e)
+                log.warning("open_path failed on %r - another process likely holds the "
+                            "device exclusive (Steam Input, DS4Windows, reWASD).",
+                            info.get("path"))
                 self._open_hinted = True
             return False
         self.dev = dev
@@ -222,7 +245,12 @@ class DualSense:
         self._open_hinted = self._waiting_hinted = False
         self._ever_connected = True
         self._last_input_at = time.monotonic()
-        log.info("DualSense connected (%s)", "BT" if self.lay["bt"] else "USB")
+        if hidhide.is_detected() and not self._persistent:
+            self._persistent = True
+            log.info("DualSense connected (%s) - persistent mode latched (HidHide present)",
+                     "BT" if self.lay["bt"] else "USB")
+        else:
+            log.info("DualSense connected (%s)", "BT" if self.lay["bt"] else "USB")
 
         if self._enable_startup_pulse:
             pulse = (M_RIGID, (0, self._pulse_force))
