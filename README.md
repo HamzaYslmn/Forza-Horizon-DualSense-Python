@@ -73,7 +73,7 @@ The launcher handles everything: downloads the app, installs Python if needed, a
 
 > **Linux extras:** install `libhidapi` (`sudo apt install libhidapi-hidraw0` / `sudo pacman -S hidapi` / `sudo dnf install hidapi`) and the udev rule from `app/packaging/linux/70-dualsense.rules`. Then unplug/replug the controller once.
 
-> **Xbox App / Microsoft Store players:** Use **DS4Windows** to make the game recognize your controller.
+> **Xbox App / Microsoft Store players:** Use **DS4Windows** so the game recognizes your controller. Please note that HidHide can interfere with this app. I recommend **disabling HidHide**. Alternatively, you can launch this app *before* opening DS4Windows, but be aware that you won't be able to reconnect your controller if it disconnects.
 
 <details>
 <summary>Manual install (for developers)</summary>
