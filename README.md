@@ -144,6 +144,7 @@ You'll feel a short pulse on both triggers — that means it's working. Now laun
 ## 🎮 Auto-launch with Steam
 
 Want the triggers to turn on automatically when you press **Play**? Tell Steam to run the launcher first.
+> ⚠️ **Warning:** Sometimes auto-launching this way can cause issues with the application. For the most stable experience, it is recommended to launch the app manually by double-clicking the script.
 
 1. In Steam, right-click **Forza Horizon** → **Properties**.
 2. Open the **General** tab and find **Launch Options**.
