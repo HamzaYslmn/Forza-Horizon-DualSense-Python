@@ -37,6 +37,8 @@ GLOBAL_FIELDS = frozenset({
     "game_poll_interval_s",
     "check_for_updates",
     "language",
+    "controller_lock_serial",
+    "controller_transport_preference",
 })
 
 _SIMPLE = (bool, int, float, str)
