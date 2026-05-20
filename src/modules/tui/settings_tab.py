@@ -42,6 +42,12 @@ SETTING_SECTIONS = [
         ("rev_limit_amp",     "Amplitude",            0, 255),
         ("rev_limit_hold_ms", "Hold (ms)",            0.0, 1000.0),
     ]),
+    ("Wheelspin pulse", [
+        ("wheelspin_min_throttle",    "Min throttle",          0, 255),
+        ("wheelspin_slip_threshold",  "Slip threshold",        0.0, 10.0),
+        ("wheelspin_slip_full_scale", "Slip full-scale range", 0.1, 10.0),
+        ("wheelspin_freq",            "Frequency (Hz)",        0, 255),
+    ]),
     ("Gear shift thump", [
         ("gear_shift_freq",        "Frequency (Hz)", 0, 255),
         ("gear_shift_amp",         "Amplitude",      0, 255),
