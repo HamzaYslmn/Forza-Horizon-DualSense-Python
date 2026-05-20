@@ -6,7 +6,10 @@
   Controller        — builds L2 / R2 and produces a frame for each per tick.
 """
 
+import logging
 import time
+
+log = logging.getLogger("fhds.dualsense")
 
 # --- Raw mode bytes ---
 M_OFF      = 0x05
@@ -120,6 +123,25 @@ class TriggerAnimations:
         self._prev_gear = None
         self._shift_until = 0.0
         self._rev_until = 0.0
+        self._unknown_drivetrain_warned: set[int] = set()
+
+    def _drive_wheel_slip(self, t, drive_train):
+        """Max longitudinal slip ratio across the wheels actually driven.
+        Drive-train int from Forza: 0=FWD, 1=RWD, 2=AWD. Anything else
+        falls back to all-wheel monitoring with a one-time warning."""
+        if drive_train == 0:
+            wheels = ("fl", "fr")
+        elif drive_train == 1:
+            wheels = ("rl", "rr")
+        elif drive_train == 2:
+            wheels = ("fl", "fr", "rl", "rr")
+        else:
+            if drive_train not in self._unknown_drivetrain_warned:
+                self._unknown_drivetrain_warned.add(drive_train)
+                log.warning("Unknown drive_train value %r - falling back to "
+                            "all-wheel slip monitoring.", drive_train)
+            wheels = ("fl", "fr", "rl", "rr")
+        return max(abs(t[f"tire_slip_ratio_{w}"]) for w in wheels)
 
     def arm_shift(self, t, s, now):
         gear = t["gear"]
