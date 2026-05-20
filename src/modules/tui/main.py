@@ -13,6 +13,7 @@ from modules import dualsense, loop, profiles, udplistener
 from modules.dualsense.triggers import off, vibration
 from modules.preferences import _version
 
+from .controller_prompt import ControllerPrompt
 from .controls_tab import ControlsTab
 from .lang_tab import LangTab
 from .logs_tab import DEFAULT_LOG_LEVEL, LogsTab
@@ -128,6 +129,7 @@ class TriggerTUI(App):
         self.refresh_status()
         self.refresh_profile()
         self.set_interval(1.0, self.refresh_status)
+        self.set_interval(0.5, self._watch_prompt)
         log.info("Starting controller and telemetry listener...")
         self.call_after_refresh(self._start_backend)
 
@@ -182,6 +184,33 @@ class TriggerTUI(App):
             webbrowser.open(self.CHANGELOG_URL)
 
     # --- topbar / logs bridge -----------------------------------------------
+
+    def _watch_prompt(self) -> None:
+        """Poll DualSense.pending_prompt twice a second; when it transitions
+        from None to a candidate list, push the modal. The modal's dismiss
+        callback writes the session pick via ds.pick_serial."""
+        ds = self._ds
+        if ds is None:
+            return
+        pending = ds.pending_prompt
+        if not pending:
+            return
+        if isinstance(self.screen, ControllerPrompt):
+            return
+        self.push_screen(
+            ControllerPrompt(pending, pulse_force=self.settings.startup_pulse_force),
+            self._on_prompt_dismissed,
+        )
+
+    def _on_prompt_dismissed(self, serial: str | None) -> None:
+        ds = self._ds
+        if ds is None:
+            return
+        if serial:
+            ds.pick_serial(serial)
+        # serial is None when the user closed via Rescan. _pending_prompt
+        # stays set; _watch_prompt will reopen on the next tick with the
+        # updated candidate list (the resolver re-runs on the next connect).
 
     def refresh_status(self):
         connected = bool(self._ds and self._ds.connected)
