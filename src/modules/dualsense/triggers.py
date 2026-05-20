@@ -32,20 +32,29 @@ def rigid(force):
 def vibration(freq, amp):
     return (M_PULSE, (_clamp(freq), _clamp(amp)))
 
-def vibration_wall(amp, freq, wall_zones):
-    """Pulse_AB: lower zones buzz at `amp` (1-8), top `wall_zones` stay maxed."""
-    a = max(1, min(8, int(amp)))
-    w = max(1, min(9, int(wall_zones)))
-    zones = [a] * (10 - w) + [8] * w
+def _encode_pulse_ab_frame(zones, freq):
+    """Pack a 10-zone strength list (each 0-8; 0 = inactive) + frequency
+    into an M_PULSE_AB HID frame tuple. Shared by vibration_wall (static
+    wall-kickback for shift_burst) and _pulse_ab_dynamic (wheelspin)."""
     active = strength = 0
-    for i, s in enumerate(zones):
-        active |= 1 << i
-        strength |= (s - 1) << (3 * i)
+    for i, s in enumerate(zones[:10]):
+        s = max(0, min(8, int(s)))
+        if s:
+            active |= 1 << i
+            strength |= (s - 1) << (3 * i)
     return (M_PULSE_AB, (
         active & 0xFF, (active >> 8) & 0xFF,
         strength & 0xFF, (strength >> 8) & 0xFF, (strength >> 16) & 0xFF, (strength >> 24) & 0xFF,
         _clamp(freq), 0, 0, 0,
     ))
+
+
+def vibration_wall(amp, freq, wall_zones):
+    """Pulse_AB: lower zones buzz at `amp` (1-8), top `wall_zones` stay maxed."""
+    a = max(1, min(8, int(amp)))
+    w = max(1, min(9, int(wall_zones)))
+    zones = [a] * (10 - w) + [8] * w
+    return _encode_pulse_ab_frame(zones, freq)
 
 def feedback(zones):
     """MultiplePositionFeedback: 10 per-zone strengths (0-8)."""
