@@ -329,8 +329,9 @@ class DualSense:
                          "(controller off, cable loose, or hidden by HidHide/Steam Input).")
             else:
                 summary = ", ".join(
-                    f"[{'BT' if _is_bluetooth(d) else 'USB'} "
-                    f"sn={d.get('serial_number') or '?'}]"
+                    f"[pid=0x{d.get('product_id', 0):04x} "
+                    f"up={d.get('usage_page')} u={d.get('usage')} "
+                    f"bus={d.get('bus_type')}]"
                     for d in devices
                 )
                 log.info("HID enumerate: %d DualSense interface(s): %s", n, summary)
