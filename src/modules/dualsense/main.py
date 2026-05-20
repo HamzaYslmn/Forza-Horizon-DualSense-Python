@@ -41,10 +41,9 @@ _mac_cache: dict[bytes, str] = {}
 
 
 def _enumerate_dualsenses():
-    """DualSense game-pad interfaces visible to hidapi. Audio/sensor interfaces
-    share VID/PID and silently drop trigger writes, so we filter to usage_page=1,
-    usage=5 here once. Windows hidapi does not expose a serial string for USB
-    DualSenses, so we backfill via HID feature report 0x09 (cached by path)."""
+    """DualSense game-pad interfaces visible to hidapi. Filtered to
+    usage_page=1, usage=5 (audio/sensor interfaces share VID/PID).
+    Windows hidapi returns empty serials for USB DualSenses; we backfill via HID feature report 0x09."""
     devices = [d for d in hid.enumerate(VENDOR_ID, 0)
                if d.get("product_id") in PRODUCT_IDS
                and d.get("usage_page", 1) == 1
@@ -203,17 +202,12 @@ class DualSense:
         # loop never reconnects. Latched on first successful connect when
         # HidHide is detected; never cleared.
         self._persistent = False
-        # Selection state. _lock_serial and _transport_pref come from settings
-        # and survive across launches. _session_serial is set only by the
-        # modal prompt callback and is cleared on process exit. _pending_prompt
-        # is None until the resolver hits a tie the TUI must arbitrate; the
-        # TUI polls it via a set_interval watcher and pushes the modal.
+        # Controller selection state. Lock/pref persist; session pick and
+        # pending prompt are process-local. Headless skips the modal prompt.
         self._lock_serial = controller_lock_serial
         self._transport_pref = controller_transport_preference
         self._session_serial = ""
         self._pending_prompt = None
-        # In headless mode the resolver falls through ("prompt", ...) to
-        # first-found with a warning; there is no UI to render the modal.
         self._headless = headless
 
     @property
@@ -279,10 +273,8 @@ class DualSense:
         log.info("Reconnect interval = %.1fs", new)
 
     def set_selection(self, lock_serial: str, transport_pref: str) -> None:
-        """Settings-changed hook called by the TUI when the user edits the
-        controller lock or transport preference. Stores the values for use on
-        the next connect attempt; does not disconnect. Call force_reconnect()
-        to hot-swap an already-attached controller."""
+        """Store new lock/transport-preference values for the next connect attempt.
+        Does not disconnect; call force_reconnect() to hot-swap."""
         self._lock_serial = lock_serial
         self._transport_pref = transport_pref
 
@@ -294,10 +286,8 @@ class DualSense:
         self._wake.set()
 
     def force_reconnect(self) -> None:
-        """User-initiated reconnect. Drops the current handle and overrides
-        the HidHide-persistent latch for one cycle so the System tab's Apply
-        button can hot-swap to a different controller mid-session. The latch
-        re-applies on the next successful connect if HidHide is still detected."""
+        """Drop the current handle and override HidHide persistent-mode latching
+        for one cycle so the picker can hot-swap. Latch re-applies on next connect."""
         self._persistent = False
         self._disconnect("user-initiated switch")
         self._wake.set()
@@ -336,10 +326,8 @@ class DualSense:
                 )
                 log.info("HID enumerate: %d DualSense interface(s): %s", n, summary)
 
-        # Selection. Layers in priority order: persistent serial lock, session
-        # pick (from the modal), transport preference, then prompt the user.
-        # Single-device branch fires first so single-controller scenarios are
-        # byte-for-byte unchanged regardless of any lock or preference set.
+        # Selection: 1-device branch first (so single-controller is unchanged),
+        # then lock, session pick, transport preference, then prompt.
         if not devices:
             if not self._waiting_hinted:
                 log.info("Waiting for DualSense - retrying every %.0fs", self._reconnect_interval)
