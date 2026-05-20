@@ -36,18 +36,14 @@ _BT_CRC_SEED = zlib.crc32(b"\xA2")
 
 
 def _enumerate_dualsenses():
+    """All DualSense game-pad interfaces visible to hidapi
+    (VENDOR_ID + known PRODUCT_IDS, usage_page=1, usage=5).
+    Audio/sensor interfaces share VID/PID and silently drop trigger writes,
+    so we filter them here once instead of at every call site."""
     return [d for d in hid.enumerate(VENDOR_ID, 0)
-            if d.get("product_id") in PRODUCT_IDS]
-
-
-def _find_gamepad():
-    """Pick the Game Pad HID interface (usage_page=1, usage=5) or None.
-    Audio/sensor interfaces share VID/PID and silently drop trigger writes."""
-    devices = _enumerate_dualsenses()
-    for d in devices:
-        if d.get("usage_page", 1) == 1 and d.get("usage", 5) == 5:
-            return d
-    return devices[0] if devices else None
+            if d.get("product_id") in PRODUCT_IDS
+            and d.get("usage_page", 1) == 1
+            and d.get("usage", 5) == 5]
 
 
 def _is_bluetooth(info):
@@ -217,12 +213,8 @@ class DualSense:
                 )
                 log.info("HID enumerate: %d DualSense interface(s): %s", n, summary)
 
-        info = _find_gamepad()
+        info = devices[0] if devices else None
         if not info:
-            if devices and not self._waiting_hinted:
-                log.warning("DualSense interfaces present but none is the Game Pad "
-                            "(usage_page=1, usage=5). Sensor/audio interfaces don't accept "
-                            "trigger writes. Reconnect the controller.")
             if not self._waiting_hinted:
                 log.info("Waiting for DualSense - retrying every %.0fs", self._reconnect_interval)
                 self._waiting_hinted = True
