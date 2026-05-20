@@ -59,6 +59,20 @@ def vibration_wall(amp, freq, wall_zones):
     zones = [a] * (10 - w) + [8] * w
     return _encode_pulse_ab_frame(zones, freq)
 
+
+def _pulse_ab_dynamic(severity, accel, freq):
+    """Build an M_PULSE_AB frame for wheelspin: zones at or above the
+    player's current trigger depth go soft, zones below stay rigid.
+    Per-zone strength drops from 8 to 2 as severity climbs 0..1; the
+    M_PULSE_AB frequency overlays the buzz character across engaged
+    zones (see docs/superpowers/notes/m_pulse_ab.md for verified
+    semantics)."""
+    sev = max(0.0, min(1.0, severity))
+    strength = round(8 - sev * 6)
+    current_zone = min(9, int(accel) // 26)
+    zones = [8] * current_zone + [strength] * (10 - current_zone)
+    return _encode_pulse_ab_frame(zones, freq)
+
 def feedback(zones):
     """MultiplePositionFeedback: 10 per-zone strengths (0-8)."""
     active = force = 0
@@ -142,6 +156,19 @@ class TriggerAnimations:
                             "all-wheel slip monitoring.", drive_train)
             wheels = ("fl", "fr", "rl", "rr")
         return max(abs(t[f"tire_slip_ratio_{w}"]) for w in wheels)
+
+    def wheelspin_pulse(self, t, s):
+        """Pulse + release R2 when drive wheels slip under throttle.
+        Symmetric with abs_pulse on L2; severity scales with slip ratio."""
+        if not s.enable_wheelspin_pulse:
+            return None
+        if t["accel"] < s.wheelspin_min_throttle:
+            return None
+        slip = self._drive_wheel_slip(t, t["drive_train"])
+        if slip < s.wheelspin_slip_threshold:
+            return None
+        sev = (slip - s.wheelspin_slip_threshold) / s.wheelspin_slip_full_scale
+        return _pulse_ab_dynamic(sev, t["accel"], s.wheelspin_freq)
 
     def arm_shift(self, t, s, now):
         gear = t["gear"]
