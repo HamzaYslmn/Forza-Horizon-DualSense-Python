@@ -231,7 +231,7 @@ class Controller:
     """Produces (L2, R2) frames per tick.
 
     Priority L2: shift thump -> ABS rumble -> wall -> brake resistance.
-    Priority R2: shift thump -> rev limiter -> wall -> throttle ramp.
+    Priority R2: shift thump -> wheelspin pulse -> rev limiter -> wall -> throttle ramp.
     """
 
     def __init__(self, settings):
@@ -272,6 +272,9 @@ class Controller:
             shift = self.anim.shift_burst(s, now, accel, s.throttle_wall_engage_at)
             if shift:
                 return shift
+        spin = self.anim.wheelspin_pulse(t, s)
+        if spin:
+            return spin
         rev = self.anim.rev_buzz(t, s, now)
         if rev:
             return rev
