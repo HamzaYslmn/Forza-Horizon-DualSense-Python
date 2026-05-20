@@ -80,6 +80,39 @@ def _log_open_failure(err) -> None:
         log.warning("DualSense open failed (%s) — another app may be holding it open.", err)
 
 
+def _new_report(layout):
+    """Allocate a fresh HID report buffer for the given layout
+    (USB or BT) with the report id and BT header byte set."""
+    buf = bytearray(layout["size"])
+    buf[0] = layout["rid"]
+    if layout["bt"]:
+        buf[1] = 0x02
+    return buf
+
+
+def _finalize_bt_crc(layout, buf):
+    """Append the BT CRC to the report buffer in place. No-op for USB."""
+    if layout["bt"]:
+        crc = zlib.crc32(memoryview(buf)[:74], _BT_CRC_SEED)
+        struct.pack_into("<I", buf, 74, crc)
+
+
+def _build_trigger_report(layout, left, right):
+    """Pack a (left, right) trigger frame pair into a complete HID report
+    buffer for the given layout. Both frames are tuples of (mode_byte, params).
+    Shared by DualSense._build and identify_pulse."""
+    buf = _new_report(layout)
+    buf[layout["flags"]] = TRIG_FLAGS
+    for pos, (mode, params) in ((layout["r"], right), (layout["l"], left)):
+        buf[pos] = mode
+        # params elements are already clamped to 0-255 by triggers.py;
+        # bytearray slice-assignment accepts a tuple of ints directly.
+        buf[pos + 1:pos + 1 + len(params)] = params[:10]
+    _finalize_bt_crc(layout, buf)
+    return buf
+
+
+
 class DualSense:
     """Triggers-only DualSense writer. Steam keeps rumble bits untouched.
 
@@ -339,29 +372,13 @@ class DualSense:
             self._wake.clear()
 
     def _new_report(self):
-        L = self.lay
-        buf = bytearray(L["size"])
-        buf[0] = L["rid"]
-        if L["bt"]:
-            buf[1] = 0x02
-        return buf
+        return _new_report(self.lay)
 
     def _finalize_bt_crc(self, buf):
-        if self.lay["bt"]:
-            crc = zlib.crc32(memoryview(buf)[:74], _BT_CRC_SEED)
-            struct.pack_into("<I", buf, 74, crc)
+        _finalize_bt_crc(self.lay, buf)
 
     def _build(self, left, right):
-        L = self.lay
-        buf = self._new_report()
-        buf[L["flags"]] = TRIG_FLAGS
-        for pos, (mode, params) in ((L["r"], right), (L["l"], left)):
-            buf[pos] = mode
-            # params elements are already clamped to 0-255 by triggers.py;
-            # bytearray slice-assignment accepts a tuple of ints directly.
-            buf[pos + 1:pos + 1 + len(params)] = params[:10]
-        self._finalize_bt_crc(buf)
-        return buf  # hidapi accepts bytearray — skip the bytes() copy.
+        return _build_trigger_report(self.lay, left, right)
 
     def _build_power_saver(self):
         """Build a minimal HID report that enables the power-save flag only."""
