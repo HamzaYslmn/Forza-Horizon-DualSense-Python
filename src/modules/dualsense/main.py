@@ -100,38 +100,6 @@ def _log_open_failure(err) -> None:
         log.warning("DualSense open failed (%s) — another app may be holding it open.", err)
 
 
-def _new_report(layout):
-    """Allocate a fresh HID report buffer for the given layout
-    (USB or BT) with the report id and BT header byte set."""
-    buf = bytearray(layout["size"])
-    buf[0] = layout["rid"]
-    if layout["bt"]:
-        buf[1] = 0x02
-    return buf
-
-
-def _finalize_bt_crc(layout, buf):
-    """Append the BT CRC to the report buffer in place. No-op for USB."""
-    if layout["bt"]:
-        crc = zlib.crc32(memoryview(buf)[:74], _BT_CRC_SEED)
-        struct.pack_into("<I", buf, 74, crc)
-
-
-def _build_trigger_report(layout, left, right):
-    """Pack a (left, right) trigger frame pair into a complete HID report
-    buffer for the given layout. Both frames are tuples of (mode_byte, params).
-    Shared by DualSense._build and identify_pulse."""
-    buf = _new_report(layout)
-    buf[layout["flags"]] = TRIG_FLAGS
-    for pos, (mode, params) in ((layout["r"], right), (layout["l"], left)):
-        buf[pos] = mode
-        # params elements are already clamped to 0-255 by triggers.py;
-        # bytearray slice-assignment accepts a tuple of ints directly.
-        buf[pos + 1:pos + 1 + len(params)] = params[:10]
-    _finalize_bt_crc(layout, buf)
-    return buf
-
-
 def _read_mac(info: dict) -> str:
     """Derive a stable per-controller identity from HID feature report 0x09.
 
@@ -181,34 +149,51 @@ def _read_mac(info: dict) -> str:
 
 
 def identify_pulse(info: dict, force: int = 180, duration_s: float = 0.2) -> bool:
-    """Open a temporary HID handle to info['path'], pulse both triggers
-    briefly via _build_trigger_report, then close. Best-effort: returns
-    False if the handle could not be opened or writes failed; never raises.
-    Used by the picker and the modal so the user can feel which controller
-    a row corresponds to in multi-controller scenarios."""
-    layout = BT if _is_bluetooth(info) else USB
+    """Pulse both triggers briefly on a controller picked from a hidapi info dict.
+    Best-effort; returns False if the open or write failed."""
+    L = BT if _is_bluetooth(info) else USB
     dev = hid.device()
     try:
         dev.open_path(info["path"])
     except (OSError, IOError) as e:
-        log.warning("identify_pulse: open_path failed on %r: %s",
-                    info.get("path"), e)
+        log.warning("identify_pulse: open_path failed on %r: %s", info.get("path"), e)
         return False
     try:
+        # pulse on
         pulse = (M_RIGID, (0, force))
-        dev.write(_build_trigger_report(layout, pulse, pulse))
+        buf = bytearray(L["size"])
+        buf[0] = L["rid"]
+        if L["bt"]:
+            buf[1] = 0x02
+        buf[L["flags"]] = TRIG_FLAGS
+        for pos, (mode, params) in ((L["r"], pulse), (L["l"], pulse)):
+            buf[pos] = mode
+            buf[pos + 1:pos + 1 + len(params)] = params[:10]
+        if L["bt"]:
+            crc = zlib.crc32(memoryview(buf)[:74], _BT_CRC_SEED)
+            struct.pack_into("<I", buf, 74, crc)
+        dev.write(buf)
         time.sleep(duration_s)
-        dev.write(_build_trigger_report(layout, off(), off()))
+        # pulse off
+        rest = off()
+        buf = bytearray(L["size"])
+        buf[0] = L["rid"]
+        if L["bt"]:
+            buf[1] = 0x02
+        buf[L["flags"]] = TRIG_FLAGS
+        for pos, (mode, params) in ((L["r"], rest), (L["l"], rest)):
+            buf[pos] = mode
+            buf[pos + 1:pos + 1 + len(params)] = params[:10]
+        if L["bt"]:
+            crc = zlib.crc32(memoryview(buf)[:74], _BT_CRC_SEED)
+            struct.pack_into("<I", buf, 74, crc)
+        dev.write(buf)
         return True
     except (OSError, IOError) as e:
-        log.warning("identify_pulse: write failed on %r: %s",
-                    info.get("path"), e)
+        log.warning("identify_pulse: write failed on %r: %s", info.get("path"), e)
         return False
     finally:
-        try:
-            dev.close()
-        except Exception:
-            pass
+        dev.close()
 
 
 def _resolve_target(devices, lock_serial, session_serial, transport_pref):
@@ -576,13 +561,29 @@ class DualSense:
             self._wake.clear()
 
     def _new_report(self):
-        return _new_report(self.lay)
+        L = self.lay
+        buf = bytearray(L["size"])
+        buf[0] = L["rid"]
+        if L["bt"]:
+            buf[1] = 0x02
+        return buf
 
     def _finalize_bt_crc(self, buf):
-        _finalize_bt_crc(self.lay, buf)
+        if self.lay["bt"]:
+            crc = zlib.crc32(memoryview(buf)[:74], _BT_CRC_SEED)
+            struct.pack_into("<I", buf, 74, crc)
 
     def _build(self, left, right):
-        return _build_trigger_report(self.lay, left, right)
+        L = self.lay
+        buf = self._new_report()
+        buf[L["flags"]] = TRIG_FLAGS
+        for pos, (mode, params) in ((L["r"], right), (L["l"], left)):
+            buf[pos] = mode
+            # params elements are already clamped to 0-255 by triggers.py;
+            # bytearray slice-assignment accepts a tuple of ints directly.
+            buf[pos + 1:pos + 1 + len(params)] = params[:10]
+        self._finalize_bt_crc(buf)
+        return buf  # hidapi accepts bytearray — skip the bytes() copy.
 
     def _build_power_saver(self):
         """Build a minimal HID report that enables the power-save flag only."""
