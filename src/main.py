@@ -40,6 +40,9 @@ def run(s: Settings) -> None:
         enable_startup_pulse=s.enable_startup_pulse,
         reconnect_interval_s=s.reconnect_interval_s,
         enable_reconnect=s.enable_reconnect,
+        controller_lock_serial=s.controller_lock_serial,
+        controller_transport_preference=s.controller_transport_preference,
+        headless=True,
     )
     ds.open()
     try:
