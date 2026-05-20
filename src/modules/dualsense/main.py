@@ -143,6 +143,42 @@ def identify_pulse(info: dict, force: int = 180, duration_s: float = 0.2) -> boo
             pass
 
 
+def _resolve_target(devices, lock_serial, session_serial, transport_pref):
+    """Selection decision tree. Pure. Returns one of:
+        ("device", info)    -> attach to this device
+        ("prompt", devices) -> ask the user; devices is the unresolved set
+        ("none",   None)    -> no devices visible at all
+
+    Priority within multi-device scenarios:
+      1. lock_serial (persistent, soft: missing falls through to auto)
+      2. session_serial (set by the modal, cleared on process exit)
+      3. transport_pref ("bt" / "usb", soft: only applied when transports differ)
+      4. prompt the user
+    """
+    if not devices:
+        return ("none", None)
+    if len(devices) == 1:
+        return ("device", devices[0])
+    if lock_serial:
+        hit = next((d for d in devices
+                    if d.get("serial_number") == lock_serial), None)
+        if hit:
+            return ("device", hit)
+    if session_serial:
+        hit = next((d for d in devices
+                    if d.get("serial_number") == session_serial), None)
+        if hit:
+            return ("device", hit)
+    transports = {("bt" if _is_bluetooth(d) else "usb") for d in devices}
+    if transport_pref in ("bt", "usb") and len(transports) > 1:
+        candidates = [d for d in devices
+                      if ("bt" if _is_bluetooth(d) else "usb") == transport_pref]
+        if len(candidates) == 1:
+            return ("device", candidates[0])
+        return ("prompt", candidates)
+    return ("prompt", devices)
+
+
 class DualSense:
     """Triggers-only DualSense writer. Steam keeps rumble bits untouched.
 
