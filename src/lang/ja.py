@@ -29,6 +29,7 @@ STRINGS = {
     "Shift thump": "シフトショック",
     "Throttle stiffness": "スロットル剛性",
     "Redline buzz": "レッドライン振動",
+    "Wheelspin pulse": "ホイールスピンパルス",
 
     # --- settings sections ---
     "Pedals / deadzones": "ペダル / デッドゾーン",
@@ -55,6 +56,9 @@ STRINGS = {
     "Trigger at RPM ratio": "RPM 比で作動",
     "Hold (ms)": "保持 (ms)",
     "Duration (ms)": "継続 (ms)",
+    "Min throttle": "最小スロットル",
+    "Slip threshold": "スリップしきい値",
+    "Slip full-scale range": "スリップフルスケール範囲",
 
     # --- system sections / fields ---
     "Telemetry (applies on next launch)": "テレメトリ（次回起動時に適用）",

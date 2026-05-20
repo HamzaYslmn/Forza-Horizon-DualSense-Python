@@ -29,6 +29,7 @@ STRINGS = {
     "Shift thump": "换挡冲击",
     "Throttle stiffness": "油门阻力",
     "Redline buzz": "红线区震动",
+    "Wheelspin pulse": "打滑脉冲",
 
     # --- settings sections ---
     "Pedals / deadzones": "踏板 / 死区",
@@ -55,6 +56,9 @@ STRINGS = {
     "Trigger at RPM ratio": "在转速比触发",
     "Hold (ms)": "保持 (ms)",
     "Duration (ms)": "持续 (ms)",
+    "Min throttle": "最低油门",
+    "Slip threshold": "打滑阈值",
+    "Slip full-scale range": "打滑满量程范围",
 
     # --- system sections / fields ---
     "Telemetry (applies on next launch)": "遥测（下次启动生效）",

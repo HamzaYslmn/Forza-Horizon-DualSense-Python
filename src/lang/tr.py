@@ -29,6 +29,7 @@ STRINGS = {
     "Shift thump": "Vites darbesi",
     "Throttle stiffness": "Gaz sertliği",
     "Redline buzz": "Devir sınırı titreşimi",
+    "Wheelspin pulse": "Patinaj titreşimi",
 
     # --- settings sections ---
     "Pedals / deadzones": "Pedallar / ölü bölgeler",
@@ -55,6 +56,9 @@ STRINGS = {
     "Trigger at RPM ratio": "RPM oranında tetikle",
     "Hold (ms)": "Tutma (ms)",
     "Duration (ms)": "Süre (ms)",
+    "Min throttle": "Minimum gaz",
+    "Slip threshold": "Kayma eşiği",
+    "Slip full-scale range": "Kayma tam ölçek aralığı",
 
     # --- system sections / fields ---
     "Telemetry (applies on next launch)": "Telemetri (sonraki açılışta uygulanır)",
