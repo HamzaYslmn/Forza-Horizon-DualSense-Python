@@ -350,19 +350,44 @@ class DualSense:
                          "(controller off, cable loose, or hidden by HidHide/Steam Input).")
             else:
                 summary = ", ".join(
-                    f"[pid=0x{d.get('product_id', 0):04x} "
-                    f"up={d.get('usage_page')} u={d.get('usage')} "
-                    f"bus={d.get('bus_type')}]"
+                    f"[{'BT' if _is_bluetooth(d) else 'USB'} "
+                    f"sn={d.get('serial_number') or '?'}]"
                     for d in devices
                 )
                 log.info("HID enumerate: %d DualSense interface(s): %s", n, summary)
 
-        info = devices[0] if devices else None
-        if not info:
+        kind, payload = _resolve_target(
+            devices,
+            self._lock_serial,
+            self._session_serial,
+            self._transport_pref,
+        )
+        if kind == "none":
             if not self._waiting_hinted:
                 log.info("Waiting for DualSense - retrying every %.0fs", self._reconnect_interval)
                 self._waiting_hinted = True
             return False
+        if kind == "prompt":
+            if self._headless:
+                log.warning(
+                    "Multiple DualSenses visible and no rule resolves the tie; "
+                    "attaching to first-found (%s sn=%s). Set "
+                    "controller_lock_serial or controller_transport_preference "
+                    "to choose deterministically.",
+                    "BT" if _is_bluetooth(payload[0]) else "USB",
+                    payload[0].get("serial_number") or "?",
+                )
+                info = payload[0]
+            else:
+                self._pending_prompt = payload
+                if not self._waiting_hinted:
+                    log.info("Waiting for user to pick a DualSense from %d candidates.",
+                             len(payload))
+                    self._waiting_hinted = True
+                return False
+        else:  # ("device", info)
+            info = payload
+        self._pending_prompt = None
         try:
             dev = hid.device()
             dev.open_path(info["path"])
