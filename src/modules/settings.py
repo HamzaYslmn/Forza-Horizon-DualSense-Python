@@ -82,13 +82,28 @@ class Settings:
 
 
 
-    # Auto-reconnect to the controller when it's missing or drops. Disabled by
-    # default for HidHide compatibility — re-enumerating HID devices while a
-    # HidHide cloak toggles can leave the OS holding a dead handle. Enable from
-    # the Settings tab if you want USB unplug/replug to recover without
-    # restarting the app.
-    enable_reconnect: bool = False
+    # Auto-reconnect to the controller when it's missing or drops. Enabled by
+    # default so sleep/wake recovery works without restarting the app. HidHide
+    # users are protected by persistent-mode latching, which makes _disconnect
+    # a no-op once the device is first opened, so the flag has no adverse
+    # effect there either. Toggle off in the Settings tab if you have a
+    # HidHide-specific reason to disable auto-reconnect.
+    enable_reconnect: bool = True
     reconnect_interval_s: float = 5.0
+
+    # --- Controller selection ---
+    # Lock to a specific DualSense by serial. Empty = auto (pick by transport
+    # preference and prompt on ties). Soft lock: if the locked controller is
+    # missing at connect time, fall through to auto logic rather than refusing.
+    # Caveat: hidapi reports different serials for the same controller on USB
+    # vs BT, so a lock is effectively to a (controller, transport) pair.
+    controller_lock_serial: str = ""
+
+    # Tiebreaker when multiple DualSenses are connected on different transports.
+    # "auto" -> no preference, prompt user on every mixed-transport tie
+    # "bt"   -> prefer the Bluetooth controller
+    # "usb"  -> prefer the USB controller
+    controller_transport_preference: str = "auto"
 
     # Whether ZUV should check for updates at launch. Default off so the user
     # isn't prompted every run; toggle on from the top of the System tab to
