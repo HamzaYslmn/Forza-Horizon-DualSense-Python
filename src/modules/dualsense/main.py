@@ -51,9 +51,7 @@ def _enumerate_dualsenses():
     for d in devices:
         if d.get("serial_number"):
             continue
-        path = d.get("path")
-        if not path:
-            continue
+        path = d["path"]
         mac = _mac_cache.get(path)
         if mac is None:
             dev = hid.device()
