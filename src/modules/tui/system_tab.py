@@ -39,7 +39,10 @@ def sentinel_path() -> Path | None:
 
 
 def apply_sentinel(enabled: bool) -> None:
-    """Reconcile the on-disk sentinel with the desired setting."""
+    """Reconcile the on-disk sentinel with the desired setting.
+    enabled=True  -> updates wanted -> remove sentinel.
+    enabled=False -> updates off    -> create sentinel.
+    No-op when running outside a ZUV bundle (no ZUV_CACHE_ROOT)."""
     path = sentinel_path()
     if path is None:
         return
@@ -103,6 +106,8 @@ class SystemTab(SettingsTab):
         yield from super().compose()
 
     def on_mount(self) -> None:
+        # Reconcile sentinel with stored setting in case the cache was wiped or
+        # the prefs file was edited externally.
         if sentinel_path() is not None:
             apply_sentinel(self.settings.check_for_updates)
 
