@@ -198,7 +198,8 @@ class DualSense:
         self._last_input_at = 0.0
         # HidHide-persistent: once True, _disconnect() is a no-op and the I/O
         # loop never reconnects. Latched on first successful connect when
-        # HidHide is detected; never cleared.
+        # HidHide is detected; cleared only by force_reconnect() for one
+        # hot-swap cycle (re-latches on the next successful connect).
         self._persistent = False
         # Controller selection state. Lock/pref persist; session pick and
         # pending prompt are process-local. Headless skips the modal prompt.
@@ -284,9 +285,12 @@ class DualSense:
         self._wake.set()
 
     def force_reconnect(self) -> None:
-        """Drop the current handle and override HidHide persistent-mode latching
-        for one cycle so the picker can hot-swap. Latch re-applies on next connect."""
+        """Drop the current handle and reopen the I/O loop's reconnect gate so
+        the picker's Apply can hot-swap regardless of enable_reconnect. Also
+        unlatches HidHide persistent mode for one cycle (re-latches on next connect)."""
         self._persistent = False
+        self._ever_connected = False
+        self._last_attempt = -1e9
         self._disconnect("user-initiated switch")
         self._wake.set()
 
