@@ -36,7 +36,10 @@ _BT_CRC_SEED = zlib.crc32(b"\xA2")
 
 # Cached BT MAC per hidapi path. Populated lazily by _enumerate_dualsenses
 # for USB DualSenses (Windows hidapi returns an empty serial for those).
+# The lock serialises the open_path/feature-read section so the I/O thread and
+# the UI thread don't both try to claim the same exclusive HID handle.
 _mac_cache: dict[bytes, str] = {}
+_mac_cache_lock = threading.Lock()
 
 
 
@@ -52,23 +55,27 @@ def _enumerate_dualsenses():
         if d.get("serial_number"):
             continue
         path = d["path"]
-        mac = _mac_cache.get(path)
-        if mac is None:
-            dev = hid.device()
-            try:
-                dev.open_path(path)
-                data = dev.get_feature_report(0x09, 64)
-            except (OSError, IOError) as e:
-                log.warning("feature 0x09 read failed on %r: %s", path, e)
+        with _mac_cache_lock:
+            mac = _mac_cache.get(path)
+            if mac is None:
+                dev = hid.device()
+                try:
+                    dev.open_path(path)
+                    data = dev.get_feature_report(0x09, 64)
+                except (OSError, IOError) as e:
+                    log.warning("feature 0x09 read failed on %r: %s", path, e)
+                    dev.close()
+                    continue
                 dev.close()
-                continue
-            dev.close()
-            # Feature 0x09 returns 20 bytes; bytes 1-6 are the controller's BT
-            # MAC in little-endian. hidapi formats BT-transport serials the same
-            # way (verified on hidapi-windows 0.15.0), so the same physical
-            # controller has the same identity over USB and BT.
-            mac = "".join(f"{b:02x}" for b in data[6:0:-1])
-            _mac_cache[path] = mac
+                # Feature 0x09 returns 20 bytes; bytes 1-6 are the controller's
+                # BT MAC in little-endian. hidapi formats BT-transport serials
+                # the same way (verified on hidapi-windows 0.15.0). Short reads
+                # (hidapi can return [] on BT-stack timeout) are skipped so a
+                # bad serial does not poison the cache.
+                if len(data) < 7:
+                    continue
+                mac = "".join(f"{b:02x}" for b in data[6:0:-1])
+                _mac_cache[path] = mac
         d["serial_number"] = mac
     return devices
 
