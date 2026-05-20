@@ -21,6 +21,7 @@ TRIGGER_CONTROLS = [
     ]),
     ("R2", [
         ("enable_gear_shift",          "Shift thump"),
+        ("enable_wheelspin_pulse",     "Wheelspin pulse"),
         ("enable_rev_limiter",         "Redline buzz"),
         ("enable_throttle_resistance", "Throttle stiffness"),
     ]),
