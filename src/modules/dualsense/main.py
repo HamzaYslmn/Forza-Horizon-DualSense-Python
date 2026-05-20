@@ -196,42 +196,6 @@ def identify_pulse(info: dict, force: int = 180, duration_s: float = 0.2) -> boo
         dev.close()
 
 
-def _resolve_target(devices, lock_serial, session_serial, transport_pref):
-    """Selection decision tree. Pure. Returns one of:
-        ("device", info)    -> attach to this device
-        ("prompt", devices) -> ask the user; devices is the unresolved set
-        ("none",   None)    -> no devices visible at all
-
-    Priority within multi-device scenarios:
-      1. lock_serial (persistent, soft: missing falls through to auto)
-      2. session_serial (set by the modal, cleared on process exit)
-      3. transport_pref ("bt" / "usb", soft: only applied when transports differ)
-      4. prompt the user
-    """
-    if not devices:
-        return ("none", None)
-    if len(devices) == 1:
-        return ("device", devices[0])
-    if lock_serial:
-        hit = next((d for d in devices
-                    if d.get("serial_number") == lock_serial), None)
-        if hit:
-            return ("device", hit)
-    if session_serial:
-        hit = next((d for d in devices
-                    if d.get("serial_number") == session_serial), None)
-        if hit:
-            return ("device", hit)
-    transports = {("bt" if _is_bluetooth(d) else "usb") for d in devices}
-    if transport_pref in ("bt", "usb") and len(transports) > 1:
-        candidates = [d for d in devices
-                      if ("bt" if _is_bluetooth(d) else "usb") == transport_pref]
-        if len(candidates) == 1:
-            return ("device", candidates[0])
-        return ("prompt", candidates)
-    return ("prompt", devices)
-
-
 class DualSense:
     """Triggers-only DualSense writer. Steam keeps rumble bits untouched.
 
@@ -409,37 +373,46 @@ class DualSense:
                 )
                 log.info("HID enumerate: %d DualSense interface(s): %s", n, summary)
 
-        kind, payload = _resolve_target(
-            devices,
-            self._lock_serial,
-            self._session_serial,
-            self._transport_pref,
-        )
-        if kind == "none":
+        # Selection. Layers in priority order: persistent serial lock, session
+        # pick (from the modal), transport preference, then prompt the user.
+        # Single-device branch fires first so single-controller scenarios are
+        # byte-for-byte unchanged regardless of any lock or preference set.
+        if not devices:
             if not self._waiting_hinted:
                 log.info("Waiting for DualSense - retrying every %.0fs", self._reconnect_interval)
                 self._waiting_hinted = True
             return False
-        if kind == "prompt":
-            if self._headless:
-                log.warning(
-                    "Multiple DualSenses visible and no rule resolves the tie; "
-                    "attaching to first-found (%s sn=%s). Set "
-                    "controller_lock_serial or controller_transport_preference "
-                    "to choose deterministically.",
-                    "BT" if _is_bluetooth(payload[0]) else "USB",
-                    payload[0].get("serial_number") or "?",
-                )
-                info = payload[0]
-            else:
-                self._pending_prompt = payload
-                if not self._waiting_hinted:
-                    log.info("Waiting for user to pick a DualSense from %d candidates.",
-                             len(payload))
-                    self._waiting_hinted = True
-                return False
-        else:  # ("device", info)
-            info = payload
+        if len(devices) == 1:
+            info = devices[0]
+        else:
+            info = None
+            if self._lock_serial:
+                info = next((d for d in devices
+                             if d.get("serial_number") == self._lock_serial), None)
+            if info is None and self._session_serial:
+                info = next((d for d in devices
+                             if d.get("serial_number") == self._session_serial), None)
+            if info is None:
+                transports = {("bt" if _is_bluetooth(d) else "usb") for d in devices}
+                candidates = devices
+                if self._transport_pref in ("bt", "usb") and len(transports) > 1:
+                    candidates = [d for d in devices
+                                  if ("bt" if _is_bluetooth(d) else "usb") == self._transport_pref]
+                if len(candidates) == 1:
+                    info = candidates[0]
+                elif self._headless:
+                    info = candidates[0]
+                    log.warning("Multiple DualSenses visible and no rule resolves the tie; "
+                                "attaching to first-found (%s sn=%s).",
+                                "BT" if _is_bluetooth(info) else "USB",
+                                info.get("serial_number") or "?")
+                else:
+                    self._pending_prompt = candidates
+                    if not self._waiting_hinted:
+                        log.info("Waiting for user to pick a DualSense from %d candidates.",
+                                 len(candidates))
+                        self._waiting_hinted = True
+                    return False
         self._pending_prompt = None
         try:
             dev = hid.device()
