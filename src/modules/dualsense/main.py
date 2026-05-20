@@ -34,16 +34,36 @@ BT  = {"rid": 0x31, "flags": 2, "vf1": 3, "psav": 11, "r": 12, "l": 23, "size": 
 # allocating "\xA2" + bytes(buf[:74]) on every write.
 _BT_CRC_SEED = zlib.crc32(b"\xA2")
 
+# Cache: hidapi path (bytes) -> derived BT MAC hex string (12 chars, lowercase).
+# Used by _read_mac to avoid re-opening the same device on every enumeration.
+# Only successful reads are cached; failures retry next time the path is seen.
+_mac_cache: dict[bytes, str] = {}
+
+
 
 def _enumerate_dualsenses():
     """All DualSense game-pad interfaces visible to hidapi
     (VENDOR_ID + known PRODUCT_IDS, usage_page=1, usage=5).
+
     Audio/sensor interfaces share VID/PID and silently drop trigger writes,
-    so we filter them here once instead of at every call site."""
-    return [d for d in hid.enumerate(VENDOR_ID, 0)
-            if d.get("product_id") in PRODUCT_IDS
-            and d.get("usage_page", 1) == 1
-            and d.get("usage", 5) == 5]
+    so we filter them here once instead of at every call site.
+
+    Windows hidapi quirk: the USB-side HID interface does not expose a serial
+    string. We mitigate by reading the BT MAC via HID feature report 0x09
+    (a Sony-documented feature) and using it as the canonical serial when
+    hidapi returns empty. The MAC matches the BT-transport hidapi serial
+    for the same physical controller, giving a single cross-transport identity
+    so picker locks survive USB<->BT transport switches."""
+    devices = [d for d in hid.enumerate(VENDOR_ID, 0)
+               if d.get("product_id") in PRODUCT_IDS
+               and d.get("usage_page", 1) == 1
+               and d.get("usage", 5) == 5]
+    for d in devices:
+        if not d.get("serial_number"):
+            mac = _read_mac(d)
+            if mac:
+                d["serial_number"] = mac
+    return devices
 
 
 def _is_bluetooth(info):
@@ -110,6 +130,54 @@ def _build_trigger_report(layout, left, right):
         buf[pos + 1:pos + 1 + len(params)] = params[:10]
     _finalize_bt_crc(layout, buf)
     return buf
+
+
+def _read_mac(info: dict) -> str:
+    """Derive a stable per-controller identity from HID feature report 0x09.
+
+    Feature 0x09 returns a 20-byte payload; bytes 1-6 are the controller's
+    BT MAC in little-endian. hidapi formats BT-transport serial_number strings
+    as the same MAC in the same byte order, lowercase hex without separators
+    (verified on hidapi-windows 0.15.0 against a paired DualSense). Injecting
+    the derived MAC into devices with empty hidapi-serial gives a single
+    identifier per physical controller, consistent across USB and BT transports.
+
+    Best-effort: returns '' if open or feature read failed (controller will
+    render as non-selectable in the picker, matching pre-fix behavior).
+    Successful reads are cached by path so we only open once per device.
+    Cache misses retry on the next call so transient open-blocked errors
+    self-heal."""
+    path = info.get("path")
+    if not path:
+        return ""
+    cached = _mac_cache.get(path)
+    if cached:
+        return cached
+    dev = hid.device()
+    try:
+        dev.open_path(path)
+    except (OSError, IOError) as e:
+        log.warning("_read_mac: open_path failed on %r: %s", path, e)
+        return ""
+    try:
+        data = dev.get_feature_report(0x09, 64)
+    except (OSError, IOError) as e:
+        log.warning("_read_mac: feature 0x09 read failed on %r: %s", path, e)
+        return ""
+    finally:
+        try:
+            dev.close()
+        except Exception:
+            pass
+    if len(data) < 7 or data[0] != 0x09:
+        log.warning("_read_mac: unexpected feature 0x09 payload on %r: len=%d id=0x%02x",
+                    path, len(data), data[0] if data else -1)
+        return ""
+    mac = "".join(f"{b:02x}" for b in data[6:0:-1])
+    _mac_cache[path] = mac
+    log.info("derived BT MAC for DualSense (%s): %s",
+             "BT" if _is_bluetooth(info) else "USB", mac)
+    return mac
 
 
 def identify_pulse(info: dict, force: int = 180, duration_s: float = 0.2) -> bool:
