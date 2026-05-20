@@ -157,12 +157,15 @@ class SystemTab(SettingsTab):
             return None
         return button.id[len("ctrl-"):]
 
-    def _rerender_controller(self) -> None:
+    async def _rerender_controller(self) -> None:
+        # remove_children() returns an AwaitRemove. We must await it before
+        # mounting new buttons or Textual will try to add the new ctrl-auto
+        # while the old one is still in the NodeList — DuplicateIds.
         self._devices = _enumerate_dualsenses()
         radio = self.query_one("#controller-radio", RadioSet)
-        radio.remove_children()
+        await radio.remove_children()
         for b in self._build_controller_buttons():
-            radio.mount(b)
+            await radio.mount(b)
         self.query_one("#controller-apply", Button).disabled = True
 
     async def _pulse_worker(self, info: dict) -> None:
@@ -185,10 +188,10 @@ class SystemTab(SettingsTab):
         if info is not None:
             self.run_worker(self._pulse_worker(info), exclusive=True, thread=True)
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
         bid = event.button.id
         if bid == "controller-rescan":
-            self._rerender_controller()
+            await self._rerender_controller()
             return
         if bid != "controller-apply":
             return
@@ -213,7 +216,7 @@ class SystemTab(SettingsTab):
                     break
             if new and new != attached_serial:
                 ds.force_reconnect()
-        self._rerender_controller()
+        await self._rerender_controller()
 
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id != "transport-pref":
