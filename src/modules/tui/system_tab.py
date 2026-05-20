@@ -1,4 +1,4 @@
-﻿"""System tab: global / launch-time settings, with the ZUV update toggle at
+"""System tab: global / launch-time settings, with the ZUV update toggle at
 the top.
 
 The ZUV loader runs *before* this app starts, so toggling the update check here
