@@ -65,6 +65,14 @@ class Settings:
     rev_limit_amp: int = 10                   # raw 0-255 byte for mode 0x06 vibration amplitude
     rev_limit_hold_ms: float = 120.0          # hold buzz this long after each trigger so the rpm bounce doesn't stutter it
 
+    # Wheelspin pulse: vibrate + soften R2 when drive wheels lose traction
+    # under throttle. M_PULSE_AB-based; intensity scales with slip severity.
+    enable_wheelspin_pulse: bool = True
+    wheelspin_min_throttle: int = 50           # accel byte gate; matches accel_deadzone
+    wheelspin_slip_threshold: float = 1.0      # slip_ratio at which effect just starts
+    wheelspin_slip_full_scale: float = 2.0     # slip above threshold for max severity
+    wheelspin_freq: int = 25                   # Hz; distinct from ABS 10 Hz for identifiability
+
     # Gear shift: single short vibration burst on up/downshift while moving.
     enable_gear_shift: bool = True
     enable_gear_shift_brake: bool = True
