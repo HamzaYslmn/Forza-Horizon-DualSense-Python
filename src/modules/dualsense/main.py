@@ -112,6 +112,36 @@ def _build_trigger_report(layout, left, right):
     return buf
 
 
+def identify_pulse(info: dict, force: int = 180, duration_s: float = 0.2) -> bool:
+    """Open a temporary HID handle to info['path'], pulse both triggers
+    briefly via _build_trigger_report, then close. Best-effort: returns
+    False if the handle could not be opened or writes failed; never raises.
+    Used by the picker and the modal so the user can feel which controller
+    a row corresponds to in multi-controller scenarios."""
+    layout = BT if _is_bluetooth(info) else USB
+    dev = hid.device()
+    try:
+        dev.open_path(info["path"])
+    except (OSError, IOError) as e:
+        log.warning("identify_pulse: open_path failed on %r: %s",
+                    info.get("path"), e)
+        return False
+    try:
+        pulse = (M_RIGID, (0, force))
+        dev.write(_build_trigger_report(layout, pulse, pulse))
+        time.sleep(duration_s)
+        dev.write(_build_trigger_report(layout, off(), off()))
+        return True
+    except (OSError, IOError) as e:
+        log.warning("identify_pulse: write failed on %r: %s",
+                    info.get("path"), e)
+        return False
+    finally:
+        try:
+            dev.close()
+        except Exception:
+            pass
+
 
 class DualSense:
     """Triggers-only DualSense writer. Steam keeps rumble bits untouched.
