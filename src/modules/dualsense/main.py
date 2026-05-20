@@ -192,6 +192,9 @@ class DualSense:
         enable_startup_pulse: bool = True,
         reconnect_interval_s: float = 5.0,
         enable_reconnect: bool = False,
+        controller_lock_serial: str = "",
+        controller_transport_preference: str = "auto",
+        headless: bool = False,
     ):
         self.dev = None
         self.dev_path = None
@@ -221,6 +224,18 @@ class DualSense:
         # loop never reconnects. Latched on first successful connect when
         # HidHide is detected; never cleared.
         self._persistent = False
+        # Selection state. _lock_serial and _transport_pref come from settings
+        # and survive across launches. _session_serial is set only by the
+        # modal prompt callback and is cleared on process exit. _pending_prompt
+        # is None until the resolver hits a tie the TUI must arbitrate; the
+        # TUI polls it via a set_interval watcher and pushes the modal.
+        self._lock_serial = controller_lock_serial
+        self._transport_pref = controller_transport_preference
+        self._session_serial = ""
+        self._pending_prompt = None
+        # In headless mode the resolver falls through ("prompt", ...) to
+        # first-found with a warning; there is no UI to render the modal.
+        self._headless = headless
 
     @property
     def connected(self) -> bool:
@@ -283,6 +298,36 @@ class DualSense:
         self._reconnect_interval = new
         self._wake.set()
         log.info("Reconnect interval = %.1fs", new)
+
+    def set_selection(self, lock_serial: str, transport_pref: str) -> None:
+        """Settings-changed hook called by the TUI when the user edits the
+        controller lock or transport preference. Stores the values for use on
+        the next connect attempt; does not disconnect. Call force_reconnect()
+        to hot-swap an already-attached controller."""
+        self._lock_serial = lock_serial
+        self._transport_pref = transport_pref
+
+    def pick_serial(self, serial: str) -> None:
+        """Modal prompt callback. Writes the session pick (not persisted) and
+        wakes the I/O thread so _try_connect re-runs immediately."""
+        self._session_serial = serial
+        self._pending_prompt = None
+        self._wake.set()
+
+    def force_reconnect(self) -> None:
+        """User-initiated reconnect. Drops the current handle and overrides
+        the HidHide-persistent latch for one cycle so the System tab's Apply
+        button can hot-swap to a different controller mid-session. The latch
+        re-applies on the next successful connect if HidHide is still detected."""
+        self._persistent = False
+        self._disconnect("user-initiated switch")
+        self._wake.set()
+
+    @property
+    def pending_prompt(self):
+        """Candidate device list the TUI should render in the modal, or None
+        when no prompt is pending. Polled by TriggerTUI._watch_prompt."""
+        return self._pending_prompt
 
     def _safe_write(self, buf) -> None:
         """Best-effort write — used for startup pulses, power-saver, and the
