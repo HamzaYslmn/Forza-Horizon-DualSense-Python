@@ -1,9 +1,7 @@
-"""Modal prompt shown when multiple DualSenses are visible and no rule
-resolves the tie. Clicking a row fires a haptic pulse on that controller
-so the user can identify it by feel; Confirm commits a session-scoped
-pick (the persistent lock is set only from the System tab)."""
+"""Modal prompt fired when multiple DualSenses are visible and no rule
+resolves the tie. Clicking a row pulses that controller to identify it."""
 
-import logging
+import threading
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
@@ -12,8 +10,6 @@ from textual.widgets import Button, Label, RadioButton, RadioSet
 
 from lang import t
 from modules.dualsense.main import _is_bluetooth, identify_pulse
-
-log = logging.getLogger("fhds")
 
 
 class ControllerPrompt(ModalScreen[str]):
@@ -80,10 +76,9 @@ class ControllerPrompt(ModalScreen[str]):
         info = next((d for d in self._candidates
                      if (d.get("serial_number") or "") == serial), None)
         if info is not None:
-            self.run_worker(self._pulse_worker(info), exclusive=True, thread=True)
-
-    async def _pulse_worker(self, info: dict) -> None:
-        identify_pulse(info, force=self._pulse_force)
+            threading.Thread(target=identify_pulse, args=(info,),
+                             kwargs={"force": self._pulse_force},
+                             daemon=True).start()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "prompt-confirm":

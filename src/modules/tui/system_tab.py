@@ -1,17 +1,14 @@
-﻿"""System tab: global / launch-time settings.
+﻿"""System tab: global / launch-time settings, with the ZUV update toggle at
+the top.
 
-Top of the tab: Controller (multi-controller lock + transport preference +
-haptic-identify). Then Updates (ZUV check-for-updates toggle). Then the
-shared System settings rows from settings_tab.SYSTEM_SECTIONS.
-
-The ZUV loader runs *before* this app starts, so toggling the update check
-here only affects the next launch. The mechanism is a sentinel file
-(.zuv-update-disabled) the loader checks in its cache_root; when present,
-the update check is skipped. ZUV exports cache_root via the ZUV_CACHE_ROOT
-env var.
+The ZUV loader runs *before* this app starts, so toggling the update check here
+only affects the next launch. The mechanism is a sentinel file
+(.zuv-update-disabled) the loader checks in its cache_root; when present, the
+update check is skipped. ZUV exports cache_root via the ZUV_CACHE_ROOT env var.
 """
 import logging
 import os
+import threading
 from pathlib import Path
 
 from textual.app import ComposeResult
@@ -158,18 +155,13 @@ class SystemTab(SettingsTab):
         return button.id[len("ctrl-"):]
 
     async def _rerender_controller(self) -> None:
-        # remove_children() returns an AwaitRemove. We must await it before
-        # mounting new buttons or Textual will try to add the new ctrl-auto
-        # while the old one is still in the NodeList — DuplicateIds.
+        # await remove_children() before mount() to avoid a DuplicateIds collision.
         self._devices = _enumerate_dualsenses()
         radio = self.query_one("#controller-radio", RadioSet)
         await radio.remove_children()
         for b in self._build_controller_buttons():
             await radio.mount(b)
         self.query_one("#controller-apply", Button).disabled = True
-
-    async def _pulse_worker(self, info: dict) -> None:
-        identify_pulse(info, force=self.settings.startup_pulse_force)
 
     def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
         if event.radio_set.id != "controller-radio":
@@ -186,7 +178,9 @@ class SystemTab(SettingsTab):
         info = next((d for d in self._devices
                      if (d.get("serial_number") or "") == serial), None)
         if info is not None:
-            self.run_worker(self._pulse_worker(info), exclusive=True, thread=True)
+            threading.Thread(target=identify_pulse, args=(info,),
+                             kwargs={"force": self.settings.startup_pulse_force},
+                             daemon=True).start()
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         bid = event.button.id
