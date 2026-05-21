@@ -1,6 +1,6 @@
 [project]
 name = "fhds"
-version = "1.4.4"
+version = "1.4.5"
 description = "Forza Horizon DualSense adaptive triggers (Steam keeps rumble)."
 readme = "README.md"
 requires-python = ">=3.13"
