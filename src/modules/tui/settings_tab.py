@@ -63,8 +63,8 @@ SYSTEM_SECTIONS = [
          "In Forza HUD: host 127.0.0.1 (try ::1 if it fails)."),
     ]),
     ("DSX output", [
-        ("enable_dsx", "Use DSX instead of direct HID", None, None,
-         "Requires DSX v3.1+ running. Takes effect on next launch."),
+        ("enable_dsx", "Force DSX output (auto-detected when DSX is running)", None, None,
+         "DSX is used automatically when DSX.exe is detected. Enable this to force DSX even when not detected."),
         ("dsx_autodetect_port", "Auto-detect DSX port", None, None,
          "Reads DSX_UDP_PortNumber.txt from %LOCALAPPDATA%\\DSX."),
         ("dsx_host", "DSX host", None, None, ""),

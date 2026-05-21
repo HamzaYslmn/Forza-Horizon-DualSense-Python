@@ -109,9 +109,9 @@ STRINGS = {
 
     # --- system tab DSX block ---
     "DSX output": "DSX 出力",
-    "Use DSX instead of direct HID": "直接 HID の代わりに DSX を使用",
-    "Requires DSX v3.1+ running. Takes effect on next launch.":
-        "DSX v3.1+ の起動が必要です。次回起動時に有効になります。",
+    "Force DSX output (auto-detected when DSX is running)": "DSX 出力を強制（DSX 起動中は自動検出）",
+    "DSX is used automatically when DSX.exe is detected. Enable this to force DSX even when not detected.":
+        "DSX.exe が検出されると自動的に使用されます。未検出時でも強制するには有効にしてください。",
     "Auto-detect DSX port": "DSX ポートを自動検出",
     "Reads DSX_UDP_PortNumber.txt from %LOCALAPPDATA%\\DSX.":
         "%LOCALAPPDATA%\\DSX の DSX_UDP_PortNumber.txt を読み込みます。",

@@ -109,9 +109,9 @@ STRINGS = {
 
     # --- system tab DSX block ---
     "DSX output": "DSX 输出",
-    "Use DSX instead of direct HID": "使用 DSX 替代直接 HID 输出",
-    "Requires DSX v3.1+ running. Takes effect on next launch.":
-        "需要 DSX v3.1+ 正在运行，下次启动时生效。",
+    "Force DSX output (auto-detected when DSX is running)": "强制 DSX 输出（DSX 运行时自动检测）",
+    "DSX is used automatically when DSX.exe is detected. Enable this to force DSX even when not detected.":
+        "检测到 DSX.exe 时自动使用 DSX。启用此项可在未检测到时强制使用 DSX。",
     "Auto-detect DSX port": "自动检测 DSX 端口",
     "Reads DSX_UDP_PortNumber.txt from %LOCALAPPDATA%\\DSX.":
         "从 %LOCALAPPDATA%\\DSX 读取 DSX_UDP_PortNumber.txt。",

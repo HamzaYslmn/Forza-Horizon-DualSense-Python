@@ -163,14 +163,18 @@ class TriggerTUI(App):
         try:
             # MARK: resync prefs - user may have switched profile before this deferred call ran
             preferences.load(s)
+            dsx_running = dsx_module.is_dsx_running()
+            use_dsx = dsx_running or s.enable_dsx
             self._ds = dualsense.DualSense(
                 startup_pulse_force=s.startup_pulse_force,
-                enable_startup_pulse=s.enable_startup_pulse and not s.enable_dsx,
+                enable_startup_pulse=s.enable_startup_pulse and not use_dsx,
                 reconnect_interval_s=s.reconnect_interval_s,
                 enable_reconnect=s.enable_reconnect,
                 controller_lock_serial=s.controller_lock_serial,
             )
-            if s.enable_dsx:
+            if use_dsx:
+                if dsx_running:
+                    log.info("DSX auto-detected as running")
                 port = dsx_module.autodetect_port() if s.dsx_autodetect_port else s.dsx_port
                 sender = dsx_module.DSXSender(s.dsx_host, port, s.dsx_controller_index)
                 if sender.open():
@@ -225,8 +229,11 @@ class TriggerTUI(App):
     # --- topbar / logs bridge -----------------------------------------------
 
     def refresh_status(self):
-        connected = bool(self._ds and self._ds.connected)
-        state = f"[bold green]{t('connected')}[/]" if connected else f"[bold red]{t('waiting')}[/]"
+        if self._dsx is not None:
+            state = f"[bold green]{t('active')}[/] (DSX)"
+        else:
+            connected = bool(self._ds and self._ds.connected)
+            state = f"[bold green]{t('connected')}[/]" if connected else f"[bold red]{t('waiting')}[/]"
         self.query_one("#status", Static).update(f"DualSense: {state}")
 
     def refresh_profile(self):

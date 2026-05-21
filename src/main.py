@@ -35,13 +35,17 @@ def _excepthook(exc_type, exc, tb):
 
 
 def _make_dsx(s: Settings):
-    """Create and open a DSXSender when DSX mode is enabled, else return None."""
-    if not s.enable_dsx:
+    """Use DSX if it is running (auto-detect) or force-enabled via settings.
+    Returns an open DSXSender, or None → fall back to direct HID."""
+    running = dsx_module.is_dsx_running()
+    if not running and not s.enable_dsx:
         return None
+    if running:
+        log.info("DSX auto-detected as running")
     port = dsx_module.autodetect_port() if s.dsx_autodetect_port else s.dsx_port
     sender = dsx_module.DSXSender(s.dsx_host, port, s.dsx_controller_index)
     if not sender.open():
-        log.warning("DSX mode enabled but sender could not be opened; falling back to HID output")
+        log.warning("DSX open failed; falling back to HID output")
         return None
     return sender
 
