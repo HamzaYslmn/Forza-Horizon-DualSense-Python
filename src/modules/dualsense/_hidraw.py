@@ -23,13 +23,16 @@ def enumerate(vendor_id: int = 0, product_id: int = 0) -> list[dict]:
     for node in sorted(glob.glob("/dev/hidraw*")):
         try:
             with open(f"/sys/class/hidraw/{os.path.basename(node)}/device/uevent") as f:
-                hid_id = next(l for l in f if l.startswith("HID_ID=")).strip()[7:]
-            bus, vid, pid = (int(p, 16) for p in hid_id.split(":"))
-        except (OSError, StopIteration, ValueError):
+                fields = dict(l.strip().split("=", 1) for l in f if "=" in l)
+            bus, vid, pid = (int(p, 16) for p in fields["HID_ID"].split(":"))
+        except (OSError, KeyError, ValueError):
             continue
         if (vendor_id and vid != vendor_id) or (product_id and pid != product_id):
             continue
-        out.append({"path": node.encode(), "product_id": pid, "bus_type": bus})
+        # HID_UNIQ is the controller's MAC: the hid-playstation driver
+        serial = fields.get("HID_UNIQ", "").replace(":", "").lower()
+        out.append({"path": node.encode(), "product_id": pid,
+                    "bus_type": bus, "serial_number": serial})
     return out
 
 
