@@ -25,6 +25,30 @@ PATH = _DATA / "user_preferences.json"
 PYPROJECT = Path(__file__).resolve().parent.parent / "pyproject.toml"
 DEFAULT_PROFILE_NAME = "Default"
 
+# Built-in preset profiles seeded on first launch (never overwritten if user edits them).
+PRESET_PROFILES = {
+    "Low": {
+        # Triggers — roughly half the default resistance
+        "brake_baseline_force": 10,
+        "brake_max_force": 40,
+        "brake_curve": 3.0,
+        "brake_static_wall_force": 120,
+        "handbrake_bonus": 30,
+        "throttle_max_force": 4,
+        "throttle_curve": 3.0,
+        # ABS pulse
+        "abs_freq": 8,
+        "abs_amp": 10,
+        # Rev limiter buzz
+        "rev_limit_freq": 15,
+        "rev_limit_amp": 5,
+        # Wheelspin
+        "wheelspin_amp": 1,
+        # Gear shift thump
+        "gear_shift_amp": 120,
+    },
+}
+
 # System fields — shared across profiles and preserved across launches.
 # Everything else lives in the active profile and is wiped from Default each launch.
 GLOBAL_FIELDS = frozenset({
@@ -171,6 +195,14 @@ def load(s) -> None:
     # Reset Default on every launch so updates ship new tuning automatically;
     # named profiles and globals are preserved.
     raw["profiles"][DEFAULT_PROFILE_NAME] = _profile_fields(type(s)())
+    # Seed built-in presets only if the name doesn't exist yet, so user edits survive.
+    defaults = _profile_fields(type(s)())
+    for preset_name, overrides in PRESET_PROFILES.items():
+        if preset_name not in raw["profiles"]:
+            snap = dict(defaults)
+            snap.update(overrides)
+            raw["profiles"][preset_name] = snap
+            log.info("Seeded preset profile: %s", preset_name)
     _write(raw)
     snap = dict(raw["globals"])
     snap.update(raw["profiles"][raw["active_profile"]])
