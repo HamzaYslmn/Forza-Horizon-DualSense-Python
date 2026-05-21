@@ -91,6 +91,23 @@ STRINGS = {
     "ZUV not found: this build is not running inside a ZUV bundle (ZUV_CACHE_ROOT env var is missing), so the update toggle has nothing to control. Run the bundled .zuv.py to manage updates.":
         "ZUV bulunamadı: bu sürüm bir ZUV paketi içinde çalışmıyor (ZUV_CACHE_ROOT ortam değişkeni eksik), bu yüzden güncelleme anahtarının denetleyeceği bir şey yok. Güncellemeleri yönetmek için paketlenmiş .zuv.py dosyasını çalıştırın.",
 
+    # --- system tab DSX block ---
+    "DSX output": "DSX çıkışı",
+    "Use DSX instead of direct HID": "Doğrudan HID yerine DSX kullan",
+    "Requires DSX v3.1+ running. Takes effect on next launch.":
+        "DSX v3.1+ çalışıyor olmalıdır. Sonraki açılışta etkinleşir.",
+    "Auto-detect DSX port": "DSX portunu otomatik algıla",
+    "Reads DSX_UDP_PortNumber.txt from %LOCALAPPDATA%\\DSX.":
+        "%LOCALAPPDATA%\\DSX konumundaki DSX_UDP_PortNumber.txt dosyasını okur.",
+    "DSX host": "DSX sunucusu",
+    "DSX port": "DSX portu",
+    "Controller index": "Kumanda indeksi",
+    "DSX: checking...": "DSX: kontrol ediliyor...",
+    "DSX: running": "DSX: çalışıyor",
+    "DSX: not detected": "DSX: algılanamadı",
+    "Refresh": "Yenile",
+    "[bold red]DSX open failed — HID fallback[/]": "[bold red]DSX başlatılamadı — HID kullanılıyor[/]",
+
     # --- profiles tab ---
     "Load": "Yükle",
     "Rename": "Yeniden adlandır",

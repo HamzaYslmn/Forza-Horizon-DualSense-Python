@@ -347,6 +347,16 @@ class SettingsTab(VerticalScroll):
         """Push settings that DualSense captures at construction to the running
         instance so the toggle takes effect without restarting the backend."""
         ds = getattr(self.app, "_ds", None)
+        if attr == "enable_dsx":
+            if not value:
+                dsx = getattr(self.app, "_dsx", None)
+                if dsx is not None:
+                    dsx.close()
+                    self.app._dsx = None
+                    log.info("DSX sender closed — restart app to re-enable HID output")
+            else:
+                log.info("DSX mode enabled — restart app to activate")
+            return
         if ds is None:
             return
         if attr == "enable_reconnect":

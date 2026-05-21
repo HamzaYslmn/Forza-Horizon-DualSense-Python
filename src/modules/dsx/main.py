@@ -17,6 +17,7 @@ import os
 import platform
 import socket
 import subprocess
+import threading
 
 from modules.dualsense.triggers import M_OFF, M_RIGID, M_PULSE, M_FEEDBACK, M_PULSE_AB
 
@@ -150,6 +151,7 @@ class DSXSender:
         self.controller_index = controller_index
         self._sock: socket.socket | None = None
         self._addr: tuple | None = None
+        self._lock = threading.Lock()
 
     def open(self) -> bool:
         """Open the UDP socket. Returns True on success, False on failure."""
@@ -173,16 +175,18 @@ class DSXSender:
         log.debug("DSX sender closed")
 
     def send(self, left, right) -> None:
-        if self._sock is None:
-            return
-        try:
-            data = build_packet_bytes(self.controller_index, left, right)
-            self._sock.sendto(data, self._addr)
-        except Exception as e:
-            log.debug("DSX send error: %s", e)
+        with self._lock:
+            if self._sock is None:
+                return
+            try:
+                data = build_packet_bytes(self.controller_index, left, right)
+                self._sock.sendto(data, self._addr)
+            except Exception as e:
+                log.debug("DSX send error: %s", e)
 
     def update_endpoint(self, host: str, port: int) -> None:
-        self.host = host
-        self.port = port
-        self._addr = (host, port)
-        log.info("DSX endpoint updated → %s:%d", host, port)
+        with self._lock:
+            self.host = host
+            self.port = port
+            self._addr = (host, port)
+        log.info("DSX endpoint updated -> %s:%d", host, port)
