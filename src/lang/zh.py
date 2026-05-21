@@ -107,6 +107,22 @@ STRINGS = {
     "resume": "继续",
     "clear": "清除",
 
+    # --- system tab DSX block ---
+    "DSX output": "DSX 输出",
+    "Use DSX instead of direct HID": "使用 DSX 替代直接 HID 输出",
+    "Requires DSX v3.1+ running. Takes effect on next launch.":
+        "需要 DSX v3.1+ 正在运行，下次启动时生效。",
+    "Auto-detect DSX port": "自动检测 DSX 端口",
+    "Reads DSX_UDP_PortNumber.txt from %LOCALAPPDATA%\\DSX.":
+        "从 %LOCALAPPDATA%\\DSX 读取 DSX_UDP_PortNumber.txt。",
+    "DSX host": "DSX 主机",
+    "DSX port": "DSX 端口",
+    "Controller index": "手柄编号",
+    "DSX: checking...": "DSX：检测中…",
+    "DSX: running": "DSX：运行中",
+    "DSX: not detected": "DSX：未检测到",
+    "Refresh": "刷新",
+
     # --- language tab ---
     "Pick a language, then restart the app to apply it.":
         "选择一种语言，然后重启应用以应用更改。",

@@ -107,6 +107,22 @@ STRINGS = {
     "resume": "再開",
     "clear": "クリア",
 
+    # --- system tab DSX block ---
+    "DSX output": "DSX 出力",
+    "Use DSX instead of direct HID": "直接 HID の代わりに DSX を使用",
+    "Requires DSX v3.1+ running. Takes effect on next launch.":
+        "DSX v3.1+ の起動が必要です。次回起動時に有効になります。",
+    "Auto-detect DSX port": "DSX ポートを自動検出",
+    "Reads DSX_UDP_PortNumber.txt from %LOCALAPPDATA%\\DSX.":
+        "%LOCALAPPDATA%\\DSX の DSX_UDP_PortNumber.txt を読み込みます。",
+    "DSX host": "DSX ホスト",
+    "DSX port": "DSX ポート",
+    "Controller index": "コントローラー番号",
+    "DSX: checking...": "DSX: 確認中...",
+    "DSX: running": "DSX: 動作中",
+    "DSX: not detected": "DSX: 未検出",
+    "Refresh": "更新",
+
     # --- language tab ---
     "Pick a language, then restart the app to apply it.":
         "言語を選択し、アプリを再起動して適用してください。",

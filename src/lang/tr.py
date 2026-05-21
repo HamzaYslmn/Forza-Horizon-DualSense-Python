@@ -107,6 +107,22 @@ STRINGS = {
     "resume": "sürdür",
     "clear": "temizle",
 
+    # --- system tab DSX block ---
+    "DSX output": "DSX çıkışı",
+    "Use DSX instead of direct HID": "Doğrudan HID yerine DSX kullan",
+    "Requires DSX v3.1+ running. Takes effect on next launch.":
+        "DSX v3.1+ çalışıyor olmalıdır. Sonraki açılışta etkinleşir.",
+    "Auto-detect DSX port": "DSX portunu otomatik algıla",
+    "Reads DSX_UDP_PortNumber.txt from %LOCALAPPDATA%\\DSX.":
+        "%LOCALAPPDATA%\\DSX konumundaki DSX_UDP_PortNumber.txt dosyasını okur.",
+    "DSX host": "DSX sunucusu",
+    "DSX port": "DSX portu",
+    "Controller index": "Kumanda indeksi",
+    "DSX: checking...": "DSX: kontrol ediliyor...",
+    "DSX: running": "DSX: çalışıyor",
+    "DSX: not detected": "DSX: algılanamadı",
+    "Refresh": "Yenile",
+
     # --- language tab ---
     "Pick a language, then restart the app to apply it.":
         "Bir dil seçin, ardından uygulamak için uygulamayı yeniden başlatın.",
