@@ -10,7 +10,7 @@ load_dotenv("dev.env")
 
 
 from modules import dualsense, udplistener, setup_logging, loop
-from modules import preferences
+from modules import preferences, dsx as dsx_module
 from modules.settings import Settings
 
 log = logging.getLogger("fhds")
@@ -34,22 +34,37 @@ def _excepthook(exc_type, exc, tb):
     log.critical("Unhandled exception", exc_info=(exc_type, exc, tb))
 
 
+def _make_dsx(s: Settings):
+    """Create and open a DSXSender when DSX mode is enabled, else return None."""
+    if not s.enable_dsx:
+        return None
+    port = dsx_module.autodetect_port() if s.dsx_autodetect_port else s.dsx_port
+    sender = dsx_module.DSXSender(s.dsx_host, port, s.dsx_controller_index)
+    sender.open()
+    return sender
+
+
 def run(s: Settings) -> None:
     ds = dualsense.DualSense(
         startup_pulse_force=s.startup_pulse_force,
-        enable_startup_pulse=s.enable_startup_pulse,
+        enable_startup_pulse=s.enable_startup_pulse and not s.enable_dsx,
         reconnect_interval_s=s.reconnect_interval_s,
         enable_reconnect=s.enable_reconnect,
         controller_lock_serial=s.controller_lock_serial,
     )
     ds.open()
+    sender = _make_dsx(s)
     try:
         with udplistener.UDPListener(s.udp_host, s.udp_port, s.udp_timeout) as listener:
             log.info("Listening on %s:%d | Ctrl+C to quit", s.udp_host, s.udp_port)
             log.info("  In game: HUD & Gameplay -> Data Out: ON, IP 127.0.0.1, Port %d", s.udp_port)
-            loop.run(ds, listener, s)
+            if sender:
+                log.info("DSX mode active — sending triggers to %s:%d", sender.host, sender.port)
+            loop.run(ds, listener, s, dsx=sender)
     finally:
         ds.close()
+        if sender:
+            sender.close()
 
 
 def run_tui(s: Settings) -> None:

@@ -38,6 +38,11 @@ GLOBAL_FIELDS = frozenset({
     "check_for_updates",
     "language",
     "controller_lock_serial",
+    "enable_dsx",
+    "dsx_host",
+    "dsx_port",
+    "dsx_controller_index",
+    "dsx_autodetect_port",
 })
 
 _SIMPLE = (bool, int, float, str)

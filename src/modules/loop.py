@@ -12,7 +12,7 @@ def _max_abs(t, prefix):
     return max(abs(t[f"{prefix}_{wheel}"]) for wheel in ("fl", "fr", "rl", "rr"))
 
 
-def run(ds, listener, s, stop_event=None):
+def run(ds, listener, s, stop_event=None, dsx=None):
     OFF = dualsense.triggers.off()
     controller = dualsense.Controller(s)
     prev = None
@@ -43,7 +43,11 @@ def run(ds, listener, s, stop_event=None):
                 log.warning("No UDP packets yet — check Forza Horizon Data Out IP/port and Windows Firewall")
                 listener.lost = True
             if idle > 1.0 and prev != (OFF, OFF):
-                ds.set(OFF, OFF); prev = (OFF, OFF)
+                if dsx is not None and s.enable_dsx:
+                    dsx.send(OFF, OFF)
+                else:
+                    ds.set(OFF, OFF)
+                prev = (OFF, OFF)
             # Fallback exit: telemetry was flowing, then stopped for too long
             # (game killed via Task Manager, or psutil missed the process).
             if pkt_count > 0 and idle > s.telemetry_lost_exit_s:
@@ -72,10 +76,13 @@ def run(ds, listener, s, stop_event=None):
 
         if (left, right) != prev:
             try:
-                ds.set(left, right); prev = (left, right)
+                if dsx is not None and s.enable_dsx:
+                    dsx.send(left, right)
+                else:
+                    ds.set(left, right)
+                prev = (left, right)
             except Exception as e:
-                # MARK: HID write can fail on disconnect; reconnect logic will retry
-                log.debug("ds.set failed: %s", e)
+                log.debug("output failed: %s", e)
 
         if now - last_log >= 1.0:
             last_log = now

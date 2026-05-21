@@ -9,7 +9,7 @@ from textual.containers import Horizontal
 from textual.widgets import Button, Header, Input, Static, Switch, TabbedContent, TabPane
 
 from lang import set_language, t
-from modules import dualsense, loop, profiles, udplistener
+from modules import dualsense, dsx as dsx_module, loop, profiles, udplistener
 from modules.dualsense.triggers import off, vibration
 from modules.preferences import _version
 
@@ -85,6 +85,7 @@ class TriggerTUI(App):
         self._stop = threading.Event()
         self._thread = None
         self._ds = None
+        self._dsx = None
         self._listener_cm = None
         self._listener = None
 
@@ -152,16 +153,22 @@ class TriggerTUI(App):
         try:
             self._ds = dualsense.DualSense(
                 startup_pulse_force=s.startup_pulse_force,
-                enable_startup_pulse=s.enable_startup_pulse,
+                enable_startup_pulse=s.enable_startup_pulse and not s.enable_dsx,
                 reconnect_interval_s=s.reconnect_interval_s,
                 enable_reconnect=s.enable_reconnect,
                 controller_lock_serial=s.controller_lock_serial,
             )
             self._ds.open()
+            if s.enable_dsx:
+                port = dsx_module.autodetect_port() if s.dsx_autodetect_port else s.dsx_port
+                self._dsx = dsx_module.DSXSender(s.dsx_host, port, s.dsx_controller_index)
+                self._dsx.open()
             self._listener_cm = udplistener.UDPListener(s.udp_host, s.udp_port, s.udp_timeout)
             self._listener = self._listener_cm.__enter__()
             log.info("Listening on %s:%d", s.udp_host, s.udp_port)
             log.info("In game: HUD & Gameplay -> Data Out: ON, IP %s, Port %d", s.udp_host, s.udp_port)
+            if self._dsx:
+                log.info("DSX mode active — sending triggers to %s:%d", self._dsx.host, self._dsx.port)
             self._thread = threading.Thread(target=self._run_loop, daemon=True)
             self._thread.start()
         except Exception as exc:
@@ -170,11 +177,14 @@ class TriggerTUI(App):
 
     def _run_loop(self):
         try:
-            loop.run(self._ds, self._listener, self.settings, stop_event=self._stop)
+            loop.run(self._ds, self._listener, self.settings, stop_event=self._stop, dsx=self._dsx)
         except Exception:
             # An unexpected error here would otherwise kill the backend thread
             log.exception("Telemetry loop crashed")
         finally:
+            if self._dsx:
+                self._dsx.close()
+                self._dsx = None
             if not self._stop.is_set():
                 self.call_from_thread(self.exit)
 

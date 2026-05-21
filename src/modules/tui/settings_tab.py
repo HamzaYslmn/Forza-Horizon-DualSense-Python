@@ -62,6 +62,15 @@ SYSTEM_SECTIONS = [
         ("udp_port", "UDP port", 1, 65535,
          "In Forza HUD: host 127.0.0.1 (try ::1 if it fails)."),
     ]),
+    ("DSX output", [
+        ("enable_dsx", "Use DSX instead of direct HID", None, None,
+         "Requires DSX v3.1+ running. Takes effect on next launch."),
+        ("dsx_autodetect_port", "Auto-detect DSX port", None, None,
+         "Reads DSX_UDP_PortNumber.txt from %LOCALAPPDATA%\\DSX."),
+        ("dsx_host", "DSX host", None, None, ""),
+        ("dsx_port", "DSX port", 1, 65535, ""),
+        ("dsx_controller_index", "Controller index", 0, 7, ""),
+    ]),
     ("Startup pulse", [
         ("startup_pulse_force", "Startup buzz strength", 0, 255, ""),
     ]),
@@ -131,6 +140,11 @@ class SettingsTab(VerticalScroll):
         max-width: 14;
         height: 3;
     }
+    SettingsTab .row Input.wide-input, SystemTab .row Input.wide-input {
+        width: 22;
+        min-width: 16;
+        max-width: 30;
+    }
     SettingsTab Label.hint, SystemTab Label.hint {
         width: 1fr;
         height: auto;
@@ -150,55 +164,59 @@ class SettingsTab(VerticalScroll):
         # MARK: two-click reset confirmation
         self._reset_armed = False
 
-    def compose(self) -> ComposeResult:
-        for section, fields in self.SECTIONS:
-            yield Label(t(section), classes="section")
-            for entry in fields:
-                attr, label, lo, hi, *rest = entry
-                hint = rest[0] if rest else ""
-                value = getattr(self.settings, attr, None)
-                if value is None:
-                    continue
-                if isinstance(value, bool):
+    def _compose_fields(self, fields) -> ComposeResult:
+        """Render one section's fields (without the header label)."""
+        for entry in fields:
+            attr, label, lo, hi, *rest = entry
+            hint = rest[0] if rest else ""
+            value = getattr(self.settings, attr, None)
+            if value is None:
+                continue
+            if isinstance(value, bool):
+                with Horizontal(classes="row"):
+                    yield Switch(value=value, id=attr)
+                    yield Label(t(label), classes="field")
+            elif isinstance(lo, (int, float)) and isinstance(hi, (int, float)):
+                input_type = "integer" if isinstance(value, int) else "number"
+                step = 5.0 if isinstance(value, int) else None
+                # MARK: port/index fields: no slider, plain input only
+                if attr in ("udp_port", "dsx_port", "dsx_controller_index"):
                     with Horizontal(classes="row"):
-                        yield Switch(value=value, id=attr)
                         yield Label(t(label), classes="field")
-                elif isinstance(lo, (int, float)) and isinstance(hi, (int, float)):
-                    input_type = "integer" if isinstance(value, int) else "number"
-                    # MARK: integer sliders snap to 5; float sliders snap to span/200
-                    step = 5.0 if isinstance(value, int) else None
-                    # MARK: UDP port has no meaningful "tune by feel" - skip the slider
-                    if attr == "udp_port":
-                        with Horizontal(classes="row"):
-                            yield Label(t(label), classes="field")
-                            # MARK: flex spacer keeps the input aligned with the slider column
-                            yield Label("", classes="spacer")
-                            yield Input(
-                                value=_format_value(value),
-                                id=f"set-{attr}",
-                                type=input_type,
-                            )
-                    else:
-                        with Horizontal(classes="row"):
-                            yield Label(t(label), classes="field")
-                            yield RangeSlider(
-                                float(value),
-                                float(lo),
-                                float(hi),
-                                step=step,
-                                id=f"slider-{attr}",
-                            )
-                            yield Input(
-                                value=_format_value(value),
-                                id=f"set-{attr}",
-                                type=input_type,
-                            )
+                        yield Label("", classes="spacer")
+                        yield Input(
+                            value=_format_value(value),
+                            id=f"set-{attr}",
+                            type=input_type,
+                        )
                 else:
                     with Horizontal(classes="row"):
                         yield Label(t(label), classes="field")
-                        yield Input(value=_format_value(value), id=f"set-{attr}")
-                if hint:
-                    yield Label(t(hint), classes="hint")
+                        yield RangeSlider(
+                            float(value), float(lo), float(hi),
+                            step=step, id=f"slider-{attr}",
+                        )
+                        yield Input(
+                            value=_format_value(value),
+                            id=f"set-{attr}",
+                            type=input_type,
+                        )
+            else:
+                with Horizontal(classes="row"):
+                    yield Label(t(label), classes="field")
+                    yield Label("", classes="spacer")
+                    yield Input(
+                        value=_format_value(value),
+                        id=f"set-{attr}",
+                        classes="wide-input",
+                    )
+            if hint:
+                yield Label(t(hint), classes="hint")
+
+    def compose(self) -> ComposeResult:
+        for section, fields in self.SECTIONS:
+            yield Label(t(section), classes="section")
+            yield from self._compose_fields(fields)
         if self.SHOW_RESET:
             yield Button(t("Reset to defaults"), id="reset-settings", variant="error")
 
