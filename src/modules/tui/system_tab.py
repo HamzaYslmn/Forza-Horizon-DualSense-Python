@@ -103,7 +103,7 @@ class SystemTab(SettingsTab):
             yield Label(t(section), classes="section")
             if section == "DSX output":
                 with Horizontal(id="dsx-status-row"):
-                    yield Static("DSX: checking...", id="dsx-status")
+                    yield Static(t("DSX: checking..."), id="dsx-status")
                     yield Button(t("Refresh"), id="dsx-check")
             yield from self._compose_fields(fields)
 
@@ -117,7 +117,7 @@ class SystemTab(SettingsTab):
         except Exception:
             return
         if running:
-            widget.update("DSX: running")
+            widget.update(t("DSX: running"))
             widget.set_classes("running")
             if not self.settings.enable_dsx:
                 self.settings.enable_dsx = True
@@ -128,7 +128,7 @@ class SystemTab(SettingsTab):
                     pass
                 log.info("DSX detected — enable_dsx auto-enabled")
         else:
-            widget.update("DSX: not detected")
+            widget.update(t("DSX: not detected"))
             widget.set_classes("stopped")
 
     async def _check_dsx(self) -> None:
@@ -235,7 +235,7 @@ class SystemTab(SettingsTab):
             await self._rerender_controller()
         elif event.button.id == "dsx-check":
             w = self.query_one("#dsx-status", Static)
-            w.update("DSX: checking...")
+            w.update(t("DSX: checking..."))
             w.set_classes("")
             await self._check_dsx()
 

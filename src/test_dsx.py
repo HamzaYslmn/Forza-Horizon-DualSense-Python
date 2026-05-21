@@ -14,13 +14,12 @@ from modules.dualsense.triggers import off, rigid, vibration, feedback, vibratio
 from modules.dsx.main import build_packet_bytes, autodetect_port, is_dsx_running
 
 HOST = "127.0.0.1"
-PORT = 6969
 CTRL = 0
 DELAY = 0.8  # seconds between effects
 
-def send(sock, left, right, label: str):
+def send(sock, port, left, right, label: str):
     data = build_packet_bytes(CTRL, left, right)
-    sock.sendto(data, (HOST, PORT))
+    sock.sendto(data, (HOST, port))
     parsed = json.loads(data)
     print(f"\n[{label}]")
     for inst in parsed["instructions"]:
@@ -29,8 +28,8 @@ def send(sock, left, right, label: str):
 
 def main():
     print(f"DSX running: {is_dsx_running()}")
-    detected = autodetect_port()
-    print(f"Detected port: {detected}  (using {PORT})")
+    port = autodetect_port()
+    print(f"Detected port: {port}")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -44,7 +43,7 @@ def main():
     ]
 
     for left, right, label in effects:
-        send(sock, left, right, label)
+        send(sock, port, left, right, label)
         time.sleep(DELAY)
 
     sock.close()

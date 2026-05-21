@@ -97,11 +97,13 @@ def _frame_to_instruction_params(mode: int, params, trigger_side: int) -> list:
         return [trigger_side, _TM_FEEDBACK, 1, strength]
 
     if mode == M_PULSE:
-        # params = (freq_byte, amp_byte)
+        # params = (freq_byte, amp_byte); freq is in Hz, DSX caps at 40 Hz
         freq = int(params[0]) if params else 0
         amp  = int(params[1]) if len(params) > 1 else 0
         dsx_amp  = max(1, min(8,  (amp  // 32) + 1))
         dsx_freq = max(1, min(40, freq))
+        if freq > 40:
+            log.debug("M_PULSE freq %d Hz clamped to 40 (DSX max)", freq)
         return [trigger_side, _TM_VIBRATION, 1, dsx_amp, dsx_freq]
 
     if mode == M_FEEDBACK:
@@ -112,6 +114,8 @@ def _frame_to_instruction_params(mode: int, params, trigger_side: int) -> list:
         zones = _decode_zone_strengths(params)
         raw_freq = int(params[6]) if len(params) > 6 else 1
         dsx_freq = max(1, min(40, raw_freq))
+        if raw_freq > 40:
+            log.debug("M_PULSE_AB freq %d Hz clamped to 40 (DSX max)", raw_freq)
         return [trigger_side, _TM_MULTI_VIBRATION, dsx_freq] + zones
 
     # Unknown mode — fall back to OFF
@@ -147,14 +151,17 @@ class DSXSender:
         self._sock: socket.socket | None = None
         self._addr: tuple | None = None
 
-    def open(self) -> None:
+    def open(self) -> bool:
+        """Open the UDP socket. Returns True on success, False on failure."""
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self._addr = (self.host, self.port)
-            log.info("DSX sender ready → %s:%d  controller_index=%d",
+            log.info("DSX sender ready -> %s:%d  controller_index=%d",
                      self.host, self.port, self.controller_index)
+            return True
         except OSError as e:
             log.error("DSX sender open failed: %s", e)
+            return False
 
     def close(self) -> None:
         if self._sock:

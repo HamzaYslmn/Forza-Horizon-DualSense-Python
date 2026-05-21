@@ -40,7 +40,9 @@ def _make_dsx(s: Settings):
         return None
     port = dsx_module.autodetect_port() if s.dsx_autodetect_port else s.dsx_port
     sender = dsx_module.DSXSender(s.dsx_host, port, s.dsx_controller_index)
-    sender.open()
+    if not sender.open():
+        log.warning("DSX mode enabled but sender could not be opened; falling back to HID output")
+        return None
     return sender
 
 

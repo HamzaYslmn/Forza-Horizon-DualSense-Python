@@ -173,8 +173,11 @@ class TriggerTUI(App):
             self._ds.open()
             if s.enable_dsx:
                 port = dsx_module.autodetect_port() if s.dsx_autodetect_port else s.dsx_port
-                self._dsx = dsx_module.DSXSender(s.dsx_host, port, s.dsx_controller_index)
-                self._dsx.open()
+                sender = dsx_module.DSXSender(s.dsx_host, port, s.dsx_controller_index)
+                if sender.open():
+                    self._dsx = sender
+                else:
+                    log.warning("DSX mode enabled but sender could not open; using HID output")
             self._listener_cm = udplistener.UDPListener(s.udp_host, s.udp_port, s.udp_timeout)
             self._listener = self._listener_cm.__enter__()
             log.info("Listening on %s:%d", s.udp_host, s.udp_port)
