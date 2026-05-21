@@ -28,24 +28,26 @@ DEFAULT_PROFILE_NAME = "Default"
 # Built-in preset profiles seeded on first launch (never overwritten if user edits them).
 PRESET_PROFILES = {
     "Low": {
-        # Triggers — roughly half the default resistance
-        "brake_baseline_force": 10,
-        "brake_max_force": 40,
-        "brake_curve": 3.0,
-        "brake_static_wall_force": 120,
-        "handbrake_bonus": 30,
-        "throttle_max_force": 4,
-        "throttle_curve": 3.0,
+        # Triggers — ~55% of default, same curve shape (lighter but natural feel)
+        "brake_baseline_force": 8,
+        "brake_max_force": 45,
+        "brake_curve": 4.5,
+        "enable_brake_static_wall": True,
+        "brake_static_wall_force": 180,
+        "handbrake_bonus": 40,
+        "throttle_baseline_force": 0,
+        "throttle_max_force": 5,
+        "throttle_curve": 4.5,
         # ABS pulse
-        "abs_freq": 8,
-        "abs_amp": 10,
+        "abs_freq": 10,
+        "abs_amp": 14,
         # Rev limiter buzz
-        "rev_limit_freq": 15,
-        "rev_limit_amp": 5,
+        "rev_limit_freq": 18,
+        "rev_limit_amp": 7,
         # Wheelspin
-        "wheelspin_amp": 1,
+        "wheelspin_amp": 2,
         # Gear shift thump
-        "gear_shift_amp": 120,
+        "gear_shift_amp": 180,
     },
 }
 
