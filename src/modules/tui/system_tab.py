@@ -14,12 +14,13 @@ from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import Button, Label, RadioButton, RadioSet, Switch
+from textual.widgets import Button, Label, RadioButton, RadioSet, Static, Switch
 
 from lang import t
 from modules import preferences
 from modules.dualsense.main import _enumerate_dualsenses, _is_bluetooth, identify_pulse
 
+from modules import dsx as dsx_module
 from .settings_tab import SYSTEM_SECTIONS, SettingsTab
 
 log = logging.getLogger("fhds")
@@ -59,6 +60,16 @@ class SystemTab(SettingsTab):
     SystemTab #controller-buttons { height: 3; padding: 0 1; }
     SystemTab #controller-buttons Button { margin-right: 2; }
     SystemTab #controller-radio { height: auto; padding: 0 1 1 1; }
+    SystemTab #dsx-status-row { height: 3; padding: 0 1; align-vertical: middle; }
+    SystemTab #dsx-status { width: 1fr; height: 1; color: $text-muted; }
+    SystemTab #dsx-status.running { color: $success; text-style: bold; }
+    SystemTab #dsx-status.stopped { color: $error; text-style: bold; }
+    SystemTab #dsx-check {
+        height: 1; min-height: 1; width: auto;
+        padding: 0 2; margin: 0;
+        border: none; background: $boost; color: $text-muted;
+    }
+    SystemTab #dsx-check:hover { background: $accent 30%; color: $text; }
     """
 
     def compose(self) -> ComposeResult:
@@ -88,16 +99,45 @@ class SystemTab(SettingsTab):
                 classes="hint",
             )
 
-        yield from super().compose()
+        for section, fields in self.SECTIONS:
+            yield Label(t(section), classes="section")
+            if section == "DSX output":
+                with Horizontal(id="dsx-status-row"):
+                    yield Static("DSX: checking...", id="dsx-status")
+                    yield Button(t("Refresh"), id="dsx-check")
+            yield from self._compose_fields(fields)
 
     def on_mount(self) -> None:
-        # Reconcile sentinel with stored setting in case the cache was wiped or
-        # the prefs file was edited externally.
         if sentinel_path() is not None:
             apply_sentinel(self.settings.check_for_updates)
 
+    def _update_dsx_status(self, running: bool) -> None:
+        try:
+            widget = self.query_one("#dsx-status", Static)
+        except Exception:
+            return
+        if running:
+            widget.update("DSX: running")
+            widget.set_classes("running")
+            if not self.settings.enable_dsx:
+                self.settings.enable_dsx = True
+                preferences.save(self.settings)
+                try:
+                    self.query_one("#enable_dsx", Switch).value = True
+                except Exception:
+                    pass
+                log.info("DSX detected — enable_dsx auto-enabled")
+        else:
+            widget.update("DSX: not detected")
+            widget.set_classes("stopped")
+
+    async def _check_dsx(self) -> None:
+        running = await asyncio.to_thread(dsx_module.is_dsx_running)
+        self._update_dsx_status(running)
+
     async def on_show(self) -> None:
         await self._rerender_controller()
+        await self._check_dsx()
 
     def _attached_serial(self) -> str:
         ds = getattr(self.app, "_ds", None)
@@ -193,6 +233,11 @@ class SystemTab(SettingsTab):
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "controller-rescan":
             await self._rerender_controller()
+        elif event.button.id == "dsx-check":
+            w = self.query_one("#dsx-status", Static)
+            w.update("DSX: checking...")
+            w.set_classes("")
+            await self._check_dsx()
 
     def on_switch_changed(self, event: Switch.Changed) -> None:
         super().on_switch_changed(event)

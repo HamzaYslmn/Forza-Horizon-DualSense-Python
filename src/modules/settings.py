@@ -105,6 +105,17 @@ class Settings:
     # a (controller, transport) pair.
     controller_lock_serial: str = ""
 
+    # =============================================================
+    # DSX output (alternative to direct HID trigger writes)
+    # =============================================================
+    # When enabled, trigger effects are sent to DSX v3.1+ via UDP JSON instead
+    # of being written directly to the controller HID handle.
+    enable_dsx: bool = False
+    dsx_host: str = "127.0.0.1"
+    dsx_port: int = 6969
+    dsx_controller_index: int = 0
+    dsx_autodetect_port: bool = True    # read port from %LOCALAPPDATA%\DSX\DSX_UDP_PortNumber.txt
+
     # Whether ZUV should check for updates at launch. Default off so the user
     # isn't prompted every run; toggle on from the top of the System tab to
     # re-enable. The toggle writes a sentinel file the ZUV loader reads on next launch.
