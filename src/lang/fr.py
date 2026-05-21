@@ -60,6 +60,8 @@ STRINGS = {
     "Click again to confirm reset": "Cliquer à nouveau pour confirmer",
     "In Forza HUD: host 127.0.0.1 (try ::1 if it fails).":
         "Dans Forza HUD : host 127.0.0.1 (essayer ::1 si ça ne marche pas).",
+    "UDP port {port} is in use. Close the other listener or change the port in the System tab.":
+        "Le port UDP {port} est déjà utilisé. Fermer l'autre programme ou changer le port dans l'onglet Système.",
 
     # --- system tab sections / fields ---
     "Telemetry (applies on next launch)": "Télémétrie (appliqué au prochain lancement)",
