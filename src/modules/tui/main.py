@@ -1,5 +1,6 @@
 """Textual TUI app: wires tabs together and owns the backend (DualSense + UDP loop)."""
 import logging
+import sys
 import threading
 import time
 import webbrowser
@@ -10,6 +11,7 @@ from textual.widgets import Button, Header, Input, Static, Switch, TabbedContent
 
 from lang import set_language, t
 from modules import dualsense, loop, preferences, profiles, udplistener
+from modules.dualsense import hidhide
 from modules.dualsense.triggers import off, vibration
 from modules.preferences import _version
 
@@ -131,6 +133,7 @@ class TriggerTUI(App):
         root.addHandler(handler)
         root.setLevel(getattr(logging, DEFAULT_LOG_LEVEL))
 
+        hidhide.register_app(sys.executable)
         self.refresh_status()
         self.refresh_profile()
         # MARK: keep handle so on_unmount can stop the poller before backend teardown
@@ -156,6 +159,7 @@ class TriggerTUI(App):
             self._listener_cm.__exit__(None, None, None)
         if self._ds:
             self._ds.close()
+        hidhide.unregister_app(sys.executable)
 
     def _start_backend(self):
         s = self.settings

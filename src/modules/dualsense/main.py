@@ -216,11 +216,7 @@ class DualSense:
 
     def open(self):
         """Start the I/O thread. Never raises if the controller is absent."""
-        if hidhide.is_detected():
-            log.info("HidHide: detected")
-            hidhide.register_app(sys.executable)
-        else:
-            log.info("HidHide: not detected")
+        log.info("HidHide: %s", "detected" if hidhide.is_detected() else "not detected")
         self._log_reconnect_mode()
         self._running = True
         self._thread = threading.Thread(target=self._io, daemon=True)
@@ -240,8 +236,6 @@ class DualSense:
         if self._thread:
             self._thread.join(timeout=2.0)
         self._disconnect()
-        if hidhide.is_detected():
-            hidhide.unregister_app(sys.executable)
 
     def set(self, left, right):
         with self._lock:

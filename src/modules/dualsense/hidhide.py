@@ -46,9 +46,19 @@ def _cli_path() -> Path | None:
     return default if default.is_file() else None
 
 
+_cli_cache: Path | None | bool = False  # False = not yet checked
+
+
+def _cached_cli() -> Path | None:
+    global _cli_cache
+    if _cli_cache is False:
+        _cli_cache = _cli_path()
+    return _cli_cache  # type: ignore[return-value]
+
+
 def _run(*args) -> tuple[bool, str]:
     """Run HidHideCLI with *args. Returns (success, combined output)."""
-    cli = _cli_path()
+    cli = _cached_cli()
     if cli is None:
         return False, "HidHideCLI.exe not found"
     try:
@@ -69,7 +79,7 @@ _detected: bool | None = None
 
 
 def _detect() -> bool:
-    return _cli_path() is not None
+    return _cached_cli() is not None
 
 
 def is_detected() -> bool:

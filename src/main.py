@@ -11,6 +11,7 @@ load_dotenv("dev.env")
 
 from modules import dualsense, udplistener, setup_logging, loop
 from modules import preferences
+from modules.dualsense import hidhide
 from modules.settings import Settings
 
 log = logging.getLogger("fhds")
@@ -35,6 +36,14 @@ def _excepthook(exc_type, exc, tb):
 
 
 def run(s: Settings) -> None:
+    hidhide.register_app(sys.executable)
+    try:
+        _run_inner(s)
+    finally:
+        hidhide.unregister_app(sys.executable)
+
+
+def _run_inner(s: Settings) -> None:
     ds = dualsense.DualSense(
         startup_pulse_force=s.startup_pulse_force,
         enable_startup_pulse=s.enable_startup_pulse,
