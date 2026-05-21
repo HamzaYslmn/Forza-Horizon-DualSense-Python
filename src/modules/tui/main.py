@@ -170,7 +170,6 @@ class TriggerTUI(App):
                 enable_reconnect=s.enable_reconnect,
                 controller_lock_serial=s.controller_lock_serial,
             )
-            self._ds.open()
             if s.enable_dsx:
                 port = dsx_module.autodetect_port() if s.dsx_autodetect_port else s.dsx_port
                 sender = dsx_module.DSXSender(s.dsx_host, port, s.dsx_controller_index)
@@ -178,6 +177,8 @@ class TriggerTUI(App):
                     self._dsx = sender
                 else:
                     log.warning("DSX mode enabled but sender could not open; using HID output")
+            if not self._dsx:
+                self._ds.open()
             self._listener_cm = udplistener.UDPListener(s.udp_host, s.udp_port, s.udp_timeout)
             self._listener = self._listener_cm.__enter__()
             log.info("Listening on %s:%d", s.udp_host, s.udp_port)

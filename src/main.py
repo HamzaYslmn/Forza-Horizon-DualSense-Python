@@ -54,8 +54,9 @@ def run(s: Settings) -> None:
         enable_reconnect=s.enable_reconnect,
         controller_lock_serial=s.controller_lock_serial,
     )
-    ds.open()
     sender = _make_dsx(s)
+    if not sender:
+        ds.open()
     try:
         with udplistener.UDPListener(s.udp_host, s.udp_port, s.udp_timeout) as listener:
             log.info("Listening on %s:%d | Ctrl+C to quit", s.udp_host, s.udp_port)
