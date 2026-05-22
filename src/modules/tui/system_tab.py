@@ -125,14 +125,14 @@ class SystemTab(SettingsTab):
                 attached_now = t("attached now")
                 marker = f"  < {attached_now}" if sn == attached_serial else ""
                 buttons.append(RadioButton(
-                    f"[{transport}] {sn}{marker}",
+                    f"\\[{transport}] {sn}{marker}",
                     id=f"ctrl-{sn}",
                     value=(sn == current_lock),
                 ))
             else:
                 no_serial = t("(no serial - not selectable)")
                 buttons.append(RadioButton(
-                    f"[{transport}] {no_serial}",
+                    f"\\[{transport}] {no_serial}",
                     id=f"ctrl-noserial-{id(d)}",
                     disabled=True,
                 ))

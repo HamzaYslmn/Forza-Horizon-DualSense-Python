@@ -45,7 +45,8 @@ _mac_cache_lock = threading.Lock()
 def _enumerate_dualsenses():
     """DualSense game-pad interfaces visible to hidapi. Filtered to
     usage_page=1, usage=5 (audio/sensor interfaces share VID/PID).
-    Windows hidapi returns empty serials for USB DualSenses; we backfill via HID feature report 0x09."""
+    Windows hidapi returns empty serials for USB DualSenses; we backfill via HID feature report 0x09.
+    When the same controller appears on both USB and BT, the BT entry is dropped (wired wins)."""
     devices = [d for d in hid.enumerate(VENDOR_ID, 0)
                if d.get("product_id") in PRODUCT_IDS
                and d.get("usage_page", 1) == 1
@@ -76,7 +77,13 @@ def _enumerate_dualsenses():
                 mac = "".join(f"{b:02x}" for b in data[6:0:-1])
                 _mac_cache[path] = mac
         d["serial_number"] = mac
-    return devices
+    # A DualSense plugged in via USB while still paired/awake on BT enumerates
+    # twice with the same serial. Prefer wired so the UI shows one row and the
+    # connect path picks the cable.
+    wired = {d["serial_number"] for d in devices
+             if d.get("serial_number") and not _is_bluetooth(d)}
+    return [d for d in devices
+            if not (_is_bluetooth(d) and d.get("serial_number") in wired)]
 
 
 def _is_bluetooth(info):

@@ -15,7 +15,7 @@ wheels = [
 
 [[package]]
 name = "fhds"
-version = "1.4.7"
+version = "1.4.7+wired.dedup"
 source = { virtual = "." }
 dependencies = [
     { name = "dotenv" },
