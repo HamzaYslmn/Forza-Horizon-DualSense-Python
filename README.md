@@ -265,5 +265,7 @@ Built by **[HamzaYslmn](https://github.com/HamzaYslmn)**.
 - **[Ereldun](https://steamcommunity.com/)** — thank you for your Coffee!
 - **[Clevens克林](https://steamcommunity.com/)** — thank you for your Candy!
 
+A heartfelt thank you as well to the anonymous sponsors who quietly supported this project, and to everyone whose appreciation, kind words, and social media shares helped keep me motivated throughout the journey.
+
 ---
 *Built for an immersive racing experience*
