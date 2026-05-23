@@ -107,14 +107,23 @@ def _is_bluetooth(info):
 
 
 def _log_open_failure(err) -> None:
-    # hidapi's "open failed" is opaque; on Linux it almost always means the
-    # hidraw node is root-only because the udev rule isn't installed.
+    # hidapi's "open failed" is opaque; the cause is platform-specific.
     if sys.platform.startswith("linux"):
         log.error(
             "DualSense open failed (%s). Install the udev rule:\n"
             "  sudo cp packaging/linux/70-dualsense.rules /etc/udev/rules.d/\n"
             "  sudo udevadm control --reload-rules && sudo udevadm trigger\n"
             "Then unplug/replug (USB) or re-pair (Bluetooth).", err,
+        )
+    elif sys.platform == "darwin":
+        log.error(
+            "DualSense open failed (%s).\n"
+            "  USB: unplug, wait a moment, and replug the controller.\n"
+            "  Bluetooth: go to System Settings -> Privacy & Security -> Bluetooth\n"
+            "    and allow Terminal (or your terminal app) access.\n"
+            "  If Steam is running with controller support enabled, disable it\n"
+            "    (Steam -> Settings -> Controller -> uncheck 'PlayStation Controller Support')\n"
+            "    or quit Steam before starting this app.", err,
         )
     else:
         log.warning("DualSense open failed (%s) — another app may be holding it open.", err)

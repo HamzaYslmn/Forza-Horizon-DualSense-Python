@@ -18,7 +18,7 @@ dependencies = [
 project-includes = ["src"]
 search-path = ["src"]
 ignore-errors-in-generated-code = true
-python-interpreter-path = ".venv/Scripts/python.exe"
+python-interpreter-path = ".venv/bin/python"
 
 [tool.pyrefly.errors]
 bad-argument-type = false

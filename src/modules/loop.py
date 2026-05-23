@@ -40,7 +40,16 @@ def run(ds, listener, s, stop_event=None):
         if pkt is None:
             idle = now - last_pkt
             if idle > 5.0 and not getattr(listener, "lost", False):
-                log.warning("No UDP packets yet — check Forza Horizon Data Out IP/port and Windows Firewall")
+                import sys
+                if sys.platform == "darwin":
+                    log.warning(
+                        "No UDP packets yet — on macOS, Forza runs on a separate PC.\n"
+                        "  1. In Forza: HUD & Gameplay -> Data Out -> ON, IP = this Mac's IP, Port %d\n"
+                        "  2. Restart this app with --host 0.0.0.0 to accept packets from any IP\n"
+                        "  3. Check that your firewall allows UDP port %d", s.udp_port, s.udp_port,
+                    )
+                else:
+                    log.warning("No UDP packets yet — check Forza Horizon Data Out IP/port and Windows Firewall")
                 listener.lost = True
             if idle > 1.0 and prev != (OFF, OFF):
                 ds.set(OFF, OFF); prev = (OFF, OFF)
