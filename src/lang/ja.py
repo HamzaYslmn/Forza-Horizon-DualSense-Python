@@ -107,6 +107,19 @@ STRINGS = {
     "resume": "再開",
     "clear": "クリア",
 
+    # --- controls tab switch labels ---
+    "Shift thump": "シフトショック",
+    "ABS rumble": "ABS 振動",
+    "Static brake wall": "静的ブレーキウォール",
+    "Brake stiffness": "ブレーキの硬さ",
+    "Handbrake stiffness bonus": "ハンドブレーキ追加硬度",
+    "Redline buzz": "レッドライン振動",
+    "Idle buzz": "アイドル振動",
+    "Throttle stiffness": "アクセルの硬さ",
+
+    # --- settings tab (idle) ---
+    "Idle strength": "アイドル強度",
+
     # --- language tab ---
     "Pick a language, then restart the app to apply it.":
         "言語を選択し、アプリを再起動して適用してください。",

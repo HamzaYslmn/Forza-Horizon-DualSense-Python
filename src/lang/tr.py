@@ -107,6 +107,19 @@ STRINGS = {
     "resume": "sürdür",
     "clear": "temizle",
 
+    # --- controls tab switch labels ---
+    "Shift thump": "Vites darbesi",
+    "ABS rumble": "ABS titreşimi",
+    "Static brake wall": "Statik fren duvarı",
+    "Brake stiffness": "Fren sertliği",
+    "Handbrake stiffness bonus": "El freni ek sertliği",
+    "Redline buzz": "Devir sınırı vızıltısı",
+    "Idle buzz": "Rölanti vızıltısı",
+    "Throttle stiffness": "Gaz sertliği",
+
+    # --- settings tab (idle) ---
+    "Idle strength": "Rölanti gücü",
+
     # --- language tab ---
     "Pick a language, then restart the app to apply it.":
         "Bir dil seçin, ardından uygulamak için uygulamayı yeniden başlatın.",
