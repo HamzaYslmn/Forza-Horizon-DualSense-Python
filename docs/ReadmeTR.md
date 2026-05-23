@@ -87,6 +87,9 @@ Bu yüzden ikisini aynı anda çalıştırabilirsiniz ve hiçbir şey birbirini 
 
 Başlatıcı (launcher) uygulamanın indirilmesini, ortamın hazırlanmasını ve çalıştırılmasını otomatik halleder. Sonraki açılışlarda güncellemeleri de denetler.
 
+> [!NOTE]
+> Her sürüme deneysel bir seçenek olarak ayrıca tek dosyalık bir **Windows `.exe`** de eklenmiştir. Uygulamayı çalıştırmanın **önerilen** yolu yine **`win_start.bat`**'tır — kendini günceller ve her Windows sürümünde aynı şekilde çalışır.
+
 > **Linux ekstraları:** `libhidapi` paketini kurun (`sudo apt install libhidapi-hidraw0` / `sudo pacman -S hidapi` / `sudo dnf install hidapi`) ve `app/packaging/linux/70-dualsense.rules` dosyasındaki udev kuralını ekleyin. Ardından kontrolcüyü bir kez çıkarıp geri takın.
 
 ### 🎮 SISR ile Oynama (Xbox Uygulaması / Windows Mağazası kullanıcıları)

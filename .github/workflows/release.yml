@@ -19,8 +19,13 @@ env:
   DEV_TAG: v999.0.0
 
 jobs:
-  publish:
+  # MARK: parse trigger + move rolling tag --------------------------------
+  prepare:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.parse.outputs.tag }}
+      prerelease: ${{ steps.parse.outputs.prerelease }}
+      title: ${{ steps.parse.outputs.title }}
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -56,23 +61,81 @@ jobs:
           git tag -f "$TAG"
           git push origin "refs/tags/$TAG" --force
 
+  # MARK: zuv bundle ------------------------------------------------------
+  bundle:
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: needs.prepare.outputs.tag
+    steps:
+      - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-        if: steps.parse.outputs.tag
 
-      - name: Build bundle
-        if: steps.parse.outputs.tag
+      - name: Build zuv bundle
         run: |
           mkdir -p release
           uvx zuv build src -o release/fhds.zuv.py \
             --update-repo HamzaYslmn/Forza-Horizon-DualSense-Python
           cp win_start.bat linux_start.sh release/
 
-      - uses: softprops/action-gh-release@v2
-        if: steps.parse.outputs.tag
+      - uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ steps.parse.outputs.tag }}
-          name: ${{ steps.parse.outputs.title }}
-          prerelease: ${{ steps.parse.outputs.prerelease == 'true' }}
+          name: bundle
+          path: release/
+
+  # MARK: Windows standalone EXE -----------------------------------------
+  exe:
+    runs-on: windows-latest
+    needs: prepare
+    if: needs.prepare.outputs.tag
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Build FH-DualSense.exe
+        shell: pwsh
+        run: |
+          uvx --from "pyinstaller>=6.11.1" `
+              --with customtkinter --with textual `
+              --with hidapi --with psutil --with dotenv `
+              --with pystray --with pillow `
+              pyinstaller "$Env:GITHUB_WORKSPACE\packaging\windows\fhds.spec" `
+              --distpath "$Env:GITHUB_WORKSPACE\packaging\windows\dist" `
+              --workpath "$Env:GITHUB_WORKSPACE\packaging\windows\build" `
+              --noconfirm --clean
+
+      - name: Rename EXE with version
+        shell: pwsh
+        run: |
+          $tag = "${{ needs.prepare.outputs.tag }}"
+          $dest = "packaging\windows\dist\FH-DualSense-$tag.exe"
+          Move-Item -Force "packaging\windows\dist\FH-DualSense.exe" $dest
+          Write-Host "Built $dest"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exe
+          path: packaging/windows/dist/FH-DualSense-*.exe
+
+  # MARK: combined release -----------------------------------------------
+  release:
+    runs-on: ubuntu-latest
+    needs: [prepare, bundle, exe]
+    if: needs.prepare.outputs.tag
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: bundle
+          path: release/
+      - uses: actions/download-artifact@v4
+        with:
+          name: exe
+          path: release/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.title }}
+          prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
           generate_release_notes: true
           body: |
             > **Heads up**
@@ -80,5 +143,5 @@ jobs:
             > - Settings live in `data/user_preferences.json` next to the launcher and survive updates.
             > - Linux: launcher offers to install `70-dualsense.rules` to `/etc/udev/rules.d/` once.
             > - Prerelease channel: run `uv run fhds.zuv.py --prerelease` to track rolling test builds.
+            > - **Windows users:** `FH-DualSense.exe` is a standalone one-file build (GUI). No install. MEIPASS auto-cleans on exit.
           files: release/*
-

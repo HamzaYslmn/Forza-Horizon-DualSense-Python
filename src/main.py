@@ -4,19 +4,17 @@ import os
 import sys
 import traceback
 from datetime import datetime
-from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv("./data/dev.env")
 
 
 from modules import dualsense, forzahorizon, setup_logging, loop
-from modules.config import preferences, Settings
+from modules.config import paths, preferences, Settings
 
 log = logging.getLogger("fhds")
 
-# MARK: Crash log — only written on unhandled exceptions
-_DATA = Path(__file__).resolve().parent / "data"
-CRASH_LOG = _DATA / "crash.log"
+# MARK: Crash log - only written on unhandled exceptions
+CRASH_LOG = paths.DATA / "crash.log"
 
 
 def _excepthook(exc_type, exc, tb):
@@ -24,7 +22,7 @@ def _excepthook(exc_type, exc, tb):
         sys.__excepthook__(exc_type, exc, tb)
         return
     try:
-        _DATA.mkdir(parents=True, exist_ok=True)
+        paths.DATA.mkdir(parents=True, exist_ok=True)
         with open(CRASH_LOG, "w", encoding="utf-8") as f:
             f.write(f"Crash at {datetime.now():%Y-%m-%d %H:%M:%S}\n\n")
             traceback.print_exception(exc_type, exc, tb, file=f)
@@ -70,7 +68,11 @@ def _confirm(prompt: str) -> bool:
 
 # MARK: Entry point
 if __name__ == "__main__":
-    if os.environ.get("IS_ZUV", "").lower() != "true" and not os.environ.get("FHDS_DEV"):
+    if (
+        os.environ.get("IS_ZUV", "").lower() != "true"
+        and not os.environ.get("FHDS_DEV")
+        and not getattr(sys, "frozen", False)
+    ):
         print(
             "\n[!] You are running an older standalone version of FH DualSense.\n"
             "    Please download the latest launcher (win_start.bat / linux_start.sh)\n"
@@ -111,10 +113,15 @@ if __name__ == "__main__":
         run(settings)
     else:
         ui_env = os.environ.get("UI", "").strip().lower()
-        # Precedence: --tui > --gui > UI env var > default (TUI)
+        frozen = getattr(sys, "frozen", False)
+        # Precedence: --tui > --gui > UI env var > GUI if frozen EXE > TUI
         if args.tui:
             run_tui(settings)
         elif args.gui or ui_env == "gui":
+            run_gui(settings)
+        elif ui_env == "tui":
+            run_tui(settings)
+        elif frozen:
             run_gui(settings)
         else:
             run_tui(settings)

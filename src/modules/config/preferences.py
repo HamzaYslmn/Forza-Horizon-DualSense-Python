@@ -18,13 +18,13 @@ import logging
 import re
 from pathlib import Path
 
+from . import paths
+
 log = logging.getLogger("fhds")
 
-# __file__ now lives at modules/config/, so reach up three levels to src/.
-_SRC = Path(__file__).resolve().parent.parent.parent
-_DATA = _SRC / "data"
+_DATA = paths.DATA
 PATH = _DATA / "user_preferences.json"
-PYPROJECT = _SRC / "pyproject.toml"
+PYPROJECT = paths.PYPROJECT
 DEFAULT_PROFILE_NAME = "Default"
 
 # System fields — shared across profiles and preserved across launches.

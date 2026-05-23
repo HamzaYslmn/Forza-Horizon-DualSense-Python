@@ -34,6 +34,7 @@ from modules.dualsense.adaptive_trigger import off, vibrate
 
 from . import theme as T
 from . import widgets as W
+from .tray import TrayController
 from .controls_tab import ControlsTab
 from .lang_tab import LangTab
 from .logs_tab import DEFAULT_LOG_LEVEL, LogsTab
@@ -98,7 +99,9 @@ class TriggerGUI:
         self.root.title("FH DualSense")
         self._set_window_icon()
         self._center_window()
-        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        self._tray = TrayController(self.root, on_show=self._show_window, on_quit=self._quit)
+        self.root.protocol("WM_DELETE_WINDOW", self._quit)
+        self.root.bind("<Unmap>", self._on_unmap)
 
         # Layout
         self._build_header()
@@ -162,10 +165,9 @@ class TriggerGUI:
         return max(8, int(round(base * self.scale)))
 
     def _set_window_icon(self):
-        from pathlib import Path
-        data = Path(__file__).resolve().parents[2] / "data"
-        ico = data / "icon.ico"
-        png = data / "icon.png"
+        from modules.config import paths
+        ico = paths.ICON_ICO
+        png = paths.ICON_PNG
         # iconphoto with a large PNG gives Windows a high-DPI source it can
         # downscale crisply for the taskbar; iconbitmap alone tends to pick
         # the 32x32 entry of the .ico for the taskbar (Tk limitation).
@@ -331,6 +333,39 @@ class TriggerGUI:
             self._teardown()
 
     def _on_close(self):
+        # Kept for backend-triggered shutdown (e.g. exit-detection).
+        self._quit()
+
+    def _hide_to_tray(self):
+        try:
+            self.root.withdraw()
+        except tk.TclError:
+            return
+        self._tray.start()
+
+    def _on_unmap(self, event):
+        if event.widget is not self.root:
+            return
+        try:
+            if self.root.state() == "iconic":
+                self._hide_to_tray()
+        except tk.TclError:
+            pass
+
+    def _show_window(self):
+        try:
+            self.root.deiconify()
+            self.root.state("normal")
+            self.root.lift()
+            self.root.focus_force()
+        except tk.TclError:
+            pass
+
+    def _quit(self):
+        try:
+            self._tray.stop()
+        except Exception:
+            pass
         self._teardown()
         try:
             self.root.destroy()

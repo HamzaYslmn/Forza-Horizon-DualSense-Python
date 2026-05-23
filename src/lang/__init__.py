@@ -15,7 +15,7 @@ choice; the new language renders on the next launch.
 """
 import importlib
 import logging
-import pkgutil
+from pathlib import Path
 
 log = logging.getLogger("fhds")
 
@@ -27,13 +27,15 @@ _active: str = DEFAULT_LANG
 
 
 def _discover() -> None:
-    """Import every `<code>.py` module in this package and read its catalog.
-    Uses the package __path__ so it works both from source and from the
-    zuv-extracted bundle tree."""
+    """Glob `<code>.py` files in this package and load each catalog.
+    Works in source, in the zuv-extracted bundle, and in PyInstaller when the
+    `lang/` folder is shipped as data (so __file__ resolves next to the .py
+    catalogs)."""
     _catalogs.clear()
     _names.clear()
-    for mod in pkgutil.iter_modules(__path__):
-        code = mod.name
+    folder = Path(__file__).resolve().parent
+    for f in sorted(folder.glob("*.py")):
+        code = f.stem
         if code.startswith("_"):
             continue
         try:

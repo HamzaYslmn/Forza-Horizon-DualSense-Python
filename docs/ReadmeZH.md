@@ -87,6 +87,9 @@
 
 启动器会自动完成应用下载、环境配置以及程序启动。下次运行它时，还会自动检查更新。
 
+> [!NOTE]
+> 每个版本还附带一个独立的 **Windows `.exe`** 作为实验性选项。**推荐**的运行方式仍然是 **`win_start.bat`** —— 它会自动更新，并在所有 Windows 版本上以相同方式工作。
+
 > **Linux 额外说明:** 安装 `libhidapi` 依赖（`sudo apt install libhidapi-hidraw0` / `sudo pacman -S hidapi` / `sudo dnf install hidapi`）并从 `app/packaging/linux/70-dualsense.rules` 添加 udev 规则。然后将手柄断开并重新连接一次。
 
 ### 🎮 使用 SISR 玩游戏（Xbox App / 微软商店版用户）

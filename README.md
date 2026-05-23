@@ -89,6 +89,9 @@ That's why you can run both at the same time and neither one breaks the other.
 
 The launcher handles downloading the app, preparing the environment, and running it. Next time you run it, it will also check for updates.
 
+> [!NOTE]
+> A standalone **Windows `.exe`** is also attached to each release as an experimental option. The **recommended** way to run the app is still **`win_start.bat`** — it self-updates and works the same across every Windows version.
+
 > **Linux extras:** install `libhidapi` (`sudo apt install libhidapi-hidraw0` / `sudo pacman -S hidapi` / `sudo dnf install hidapi`) and the udev rule from `app/packaging/linux/70-dualsense.rules`. Then unplug/replug the controller once.
 
 ### 🎮 Playing with SISR (Xbox App / Windows Store users)
