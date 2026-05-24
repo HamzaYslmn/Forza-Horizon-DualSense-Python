@@ -74,6 +74,16 @@ SETTING_SECTIONS = [
     ("Idle buzz", [
         ("idle_amp_high", "Idle strength", 0, 255, ""),
     ]),
+    ("Turbo lag", [
+        ("enable_turbo_lag", "Turbo lag vibration", None, None,
+         "Brief R2 rumble when boost pressure climbs."),
+        ("turbo_lag_freq", "Rumble speed (Hz)", 0, 255,
+         "Deep rumble frequency. Default 8."),
+        ("turbo_lag_amp", "Rumble strength", 0, 255,
+         "Max vibration amplitude. Default 40."),
+        ("turbo_lag_threshold", "Boost change sensitivity", 0.0, 1.0,
+         "Min boost delta per tick to trigger. Default 0.05."),
+    ]),
     ("Gear shift thump", [
         ("gear_shift_freq", "Thump speed (Hz)", 0, 255, ""),
         ("gear_shift_amp", "Thump strength", 0, 255, ""),

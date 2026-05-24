@@ -146,4 +146,17 @@ STRINGS = {
         "低い = ダートでより柔らかいブレーキ。デフォルト0.5。",
     "Lower = softer brake on gravel/water. Default 0.25.":
         "低い = 砂利/水でより柔らかいブレーキ。デフォルト0.25。",
+    "Turbo lag": "ターボラグ",
+    "Turbo lag vibration": "ターボラグ振動",
+    "Rumble speed (Hz)": "振動速度 (Hz)",
+    "Rumble strength": "振動強度",
+    "Boost change sensitivity": "ブースト変化感度",
+    "Brief R2 rumble when boost pressure climbs.":
+        "ブースト圧力上昇時の短いR2振動。",
+    "Deep rumble frequency. Default 8.":
+        "低い振動周波数。デフォルト8。",
+    "Max vibration amplitude. Default 40.":
+        "最大振動振幅。デフォルト40。",
+    "Min boost delta per tick to trigger. Default 0.05.":
+        "トリガーするtickあたりの最小ブースト変化。デフォルト0.05。",
 }

@@ -68,6 +68,7 @@ class TriggerAnimations:
         self._prev_gear = None
         self._shift_until = 0.0
         self._rev_until = 0.0
+        self._prev_boost = 0.0
 
     def arm_shift(self, t, s, now):
         gear = t["gear"]
@@ -139,6 +140,18 @@ class TriggerAnimations:
             return vibrate(45, min(255, int(amp * 2)))
         return vibrate(130, amp)                             # tarmac: sharp squeal
 
+    def turbo_lag(self, t, s):
+        if not s.enable_turbo_lag:
+            self._prev_boost = t["boost"]
+            return None
+        boost = t["boost"]
+        delta = boost - self._prev_boost
+        self._prev_boost = boost
+        if delta < s.turbo_lag_threshold or boost < 0.1:
+            return None
+        amp = min(255, int(s.turbo_lag_amp * min(delta / 0.2, 1.0)))
+        return vibrate(s.turbo_lag_freq, amp)
+
     def abs_pulse(self, t, s):
         if not s.enable_abs:
             return None
@@ -168,7 +181,6 @@ class TriggerAnimations:
                 else:
                     mult = s.surface_brake_tarmac
             force = max(0, int(force * mult))
-        force = _ramp(t["brake"], s.brake_deadzone, baseline,
         if handbrake:
             force += s.handbrake_bonus
         return rigid(force)
@@ -206,8 +218,9 @@ class Controller:
         1. Gear shift thump    - one-shot burst on every shift, brief
         2. Rev limiter buzz    - rpm/max_rpm >= rev_limit_ratio
         3. Wheelspin buzz      - driven wheels slipping (surface-aware)
-        4. Firmware end wall   - hard wall near 100% travel (hysteresis)
-        5. Throttle resistance - default rigid ramp 0..max_force
+        4. Turbo lag           - boost pressure rising, deep rumble
+        5. Firmware end wall   - hard wall near 100% travel (hysteresis)
+        6. Throttle resistance - default rigid ramp 0..max_force
     """
 
     def __init__(self, settings):
@@ -275,11 +288,16 @@ class Controller:
         if spin is not None:
             return spin
 
-        # 5. Firmware end wall - hard wall near 100% travel (latched via hysteresis)
+        # 5. Turbo lag - boost climbing, brief deep rumble
+        turbo = self.anim.turbo_lag(t, s)
+        if turbo is not None:
+            return turbo
+
+        # 6. Firmware end wall - hard wall near 100% travel (latched via hysteresis)
         self._r2_in_wall = _wall_state(accel, self._r2_in_wall,
                                        s.throttle_wall_engage_at, s.throttle_wall_release_at)
         if self._r2_in_wall:
             return self.wall
 
-        # 6. Throttle resistance - default rigid ramp
+        # 7. Throttle resistance - default rigid ramp
         return self.anim.throttle_ramp(t, s)

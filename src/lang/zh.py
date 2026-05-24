@@ -146,4 +146,17 @@ STRINGS = {
         "越低 = 泥土路刹车越软。默认0.5。",
     "Lower = softer brake on gravel/water. Default 0.25.":
         "越低 = 碎石/水面刹车越软。默认0.25。",
+    "Turbo lag": "涡轮迟滞",
+    "Turbo lag vibration": "涡轮迟滞振动",
+    "Rumble speed (Hz)": "轰鸣速度 (Hz)",
+    "Rumble strength": "轰鸣强度",
+    "Boost change sensitivity": "增压变化灵敏度",
+    "Brief R2 rumble when boost pressure climbs.":
+        "增压压力上升时R2短暂轰鸣。",
+    "Deep rumble frequency. Default 8.":
+        "低沉轰鸣频率。默认8。",
+    "Max vibration amplitude. Default 40.":
+        "最大振动幅度。默认40。",
+    "Min boost delta per tick to trigger. Default 0.05.":
+        "每次触发最小增压变化量。默认0.05。",
 }

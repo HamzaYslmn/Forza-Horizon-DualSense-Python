@@ -146,4 +146,17 @@ STRINGS = {
         "Düşük = toprakta daha yumuşak fren. Varsayılan 0.5.",
     "Lower = softer brake on gravel/water. Default 0.25.":
         "Düşük = çakıl/suda daha yumuşak fren. Varsayılan 0.25.",
+    "Turbo lag": "Turbo gecikmesi",
+    "Turbo lag vibration": "Turbo gecikme titreşimi",
+    "Rumble speed (Hz)": "Gürültü hızı (Hz)",
+    "Rumble strength": "Gürültü gücü",
+    "Boost change sensitivity": "Boost değişim hassasiyeti",
+    "Brief R2 rumble when boost pressure climbs.":
+        "Boost basıncı yükselirken kısa R2 gürültüsü.",
+    "Deep rumble frequency. Default 8.":
+        "Derin gürültü frekansı. Varsayılan 8.",
+    "Max vibration amplitude. Default 40.":
+        "Maks titreşim genliği. Varsayılan 40.",
+    "Min boost delta per tick to trigger. Default 0.05.":
+        "Tetiklemek için tick başına min boost deltası. Varsayılan 0.05.",
 }

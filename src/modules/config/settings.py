@@ -93,6 +93,14 @@ class Settings:
     idle_amp_high: int = 30                  # loud half of the cycle
     idle_period_s: float = 0.5                # full cycle length (sec)
 
+    # MARK: R2 turbo lag
+    # Brief deep vibration on R2 when boost pressure is climbing, simulating
+    # turbo lag before full power kicks in. Silent at steady-state or zero boost.
+    enable_turbo_lag: bool = True
+    turbo_lag_freq: int = 8                   # deep rumble frequency (Hz)
+    turbo_lag_amp: int = 40                   # max vibration amplitude
+    turbo_lag_threshold: float = 0.05         # minimum boost change per tick to trigger
+
     # MARK: Gear shift
     # One short burst on up/downshift while moving.
     enable_gear_shift: bool = True            # buzz on R2
