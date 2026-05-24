@@ -376,7 +376,7 @@ class DualSense:
         self.dev = None
         self.dev_path = None
         self.dev_serial = None
-        if was_connected:
+        if was_connected and self._running:
             suffix = f" ({reason})" if reason else ""
             if self._enable_reconnect:
                 log.warning("DualSense disconnected%s — retrying every %.0fs",
