@@ -99,7 +99,7 @@ class Settings:
     enable_turbo_lag: bool = True
     turbo_lag_freq: int = 8                   # deep rumble frequency (Hz)
     turbo_lag_amp: int = 40                   # max vibration amplitude
-    turbo_lag_threshold: float = 0.05         # minimum boost change per tick to trigger
+    turbo_lag_threshold: float = 0.15         # minimum boost change per tick to trigger
     turbo_lag_cooldown_ms: float = 300.0      # min time between rumbles (suppresses jitter)
 
     # MARK: Gear shift

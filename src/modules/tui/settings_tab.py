@@ -79,7 +79,7 @@ SETTING_SECTIONS = [
         ("turbo_lag_amp", "Rumble strength", 0, 255,
          "Max vibration amplitude. Default 40."),
         ("turbo_lag_threshold", "Boost change sensitivity", 0.0, 1.0,
-         "Min boost delta per tick to trigger. Default 0.05."),
+         "Min boost delta per tick to trigger. Default 0.15."),
         ("turbo_lag_cooldown_ms", "Cooldown (ms)", 0.0, 2000.0,
          "Min gap between rumbles. Suppresses steady-state jitter. Default 300."),
     ]),

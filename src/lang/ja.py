@@ -157,8 +157,8 @@ STRINGS = {
         "低い振動周波数。デフォルト8。",
     "Max vibration amplitude. Default 40.":
         "最大振動振幅。デフォルト40。",
-    "Min boost delta per tick to trigger. Default 0.05.":
-        "トリガーするtickあたりの最小ブースト変化。デフォルト0.05。",
+    "Min boost delta per tick to trigger. Default 0.15.":
+        "トリガーするtickあたりの最小ブースト変化。デフォルト0.15。",
     "Cooldown (ms)": "クールダウン (ms)",
     "Min gap between rumbles. Suppresses steady-state jitter. Default 300.":
         "振動間の最小間隔。定常状態のジッターを抑制します。デフォルト300。",
