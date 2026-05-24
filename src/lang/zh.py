@@ -125,4 +125,13 @@ STRINGS = {
         "选择一种语言，然后重启应用以应用更改。",
     "Restart the app to apply the new language.":
         "重启应用以应用新语言。",
+    "Speed-based throttle": "基于速度的油门",
+    "Extra force at standstill": "静止时额外力度",
+    "Fade-out speed (km/h)": "衰减速度 (km/h)",
+    "Extra resistance at low speed for precise control, lighter at high speed.":
+        "低速时增加阻力以实现精确控制，高速时更轻。",
+    "0 = off. Flat resistance added at 0 km/h, fading to normal.":
+        "0 = 关闭。在0 km/h时增加平坦阻力，逐渐衰减至正常。",
+    "Speed where boost fully fades. Default 80.":
+        "增益完全衰减的速度。默认80。",
 }

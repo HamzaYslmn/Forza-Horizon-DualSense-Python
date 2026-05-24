@@ -162,8 +162,15 @@ class TriggerAnimations:
     def throttle_ramp(self, t, s):
         if not s.enable_throttle_resistance:
             return off()
-        return rigid(_ramp(t["accel"], s.accel_deadzone, s.throttle_baseline_force,
-                           s.throttle_max_force, s.throttle_curve, s.throttle_wall_engage_at))
+        force = _ramp(t["accel"], s.accel_deadzone, s.throttle_baseline_force,
+                      s.throttle_max_force, s.throttle_curve, s.throttle_wall_engage_at)
+        if s.enable_speed_throttle and s.speed_throttle_boost > 0 and t["accel"] >= s.accel_deadzone:
+            fade = max(1.0, s.speed_throttle_fade_km)
+            speed = t["speed"]
+            if speed < fade:
+                ratio = speed / fade
+                force = min(255, force + int(s.speed_throttle_boost * (1.0 - ratio)))
+        return rigid(force)
 
 
 # --- Controller -----------------------------------------------------------

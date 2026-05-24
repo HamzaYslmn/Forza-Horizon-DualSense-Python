@@ -125,4 +125,13 @@ STRINGS = {
         "言語を選択し、アプリを再起動して適用してください。",
     "Restart the app to apply the new language.":
         "新しい言語を適用するにはアプリを再起動してください。",
+    "Speed-based throttle": "速度ベースのスロットル",
+    "Extra force at standstill": "停止時の追加力",
+    "Fade-out speed (km/h)": "減衰速度 (km/h)",
+    "Extra resistance at low speed for precise control, lighter at high speed.":
+        "低速では精密操作のため抵抗を増し、高速では軽くします。",
+    "0 = off. Flat resistance added at 0 km/h, fading to normal.":
+        "0 = オフ。0 km/hで平坦な抵抗が追加され、通常まで減衰します。",
+    "Speed where boost fully fades. Default 80.":
+        "ブーストが完全に減衰する速度。デフォルト80。",
 }

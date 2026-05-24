@@ -53,6 +53,13 @@ class Settings:
     throttle_wall_engage_at: int = 250        # byte that triggers firmware wall. DO NOT CHANGE
     throttle_wall_release_at: int = 200       # hysteresis exit byte. DO NOT CHANGE
 
+    # MARK: R2 speed-based throttle
+    # Extra throttle resistance at low speed; fades as speed rises.
+    # boost=0 means off (no extra force). Flat additive at 0 km/h, fading to normal by fade_km.
+    enable_speed_throttle: bool = True
+    speed_throttle_boost: int = 30            # extra force added at standstill (0 = off)
+    speed_throttle_fade_km: float = 80.0     # speed where boost fully fades
+
     # MARK: R2 rev limiter
     # Vibrates when rpm/max_rpm exceeds the ratio; brief hold smooths rpm bounce.
     enable_rev_limiter: bool = True
