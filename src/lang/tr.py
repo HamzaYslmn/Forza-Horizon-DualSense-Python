@@ -88,6 +88,25 @@ STRINGS = {
     "Auto-exit when the game closes": "Oyun kapanınca otomatik çık",
     "Game-watch check interval (s)": "Oyun izleme kontrol aralığı (s)",
 
+    # --- DSX ---
+    "DSX": "DSX",
+    "DSX integration": "DSX entegrasyonu",
+    "Send triggers to DualSenseX via UDP instead of HID. Prevents conflicts when DSX (Steam) is running. Toggling restarts the backend.":
+        "Tetikleri HID yerine UDP üzerinden DualSenseX'e gönder. "
+        "DSX (Steam) çalışırken çakışmaları önler. "
+        "Değiştirmek arka ucu yeniden başlatır.",
+    "DSX connection": "DSX bağlantısı",
+    "Host": "Host",
+    "Port": "Port",
+    "Default 127.0.0.1. Match the host in DSX settings.":
+        "Varsayılan 127.0.0.1. DSX ayarlarındaki host ile eşleşmeli.",
+    "Default 6969. Match the port in DSX settings.":
+        "Varsayılan 6969. DSX ayarlarındaki port ile eşleşmeli.",
+    "DSX is active - controller managed by DSX. Disable DSX to select a controller here.":
+        "DSX etkin - kumanda DSX tarafından yönetiliyor. Kumanda seçmek için DSX'i devre dışı bırakın.",
+    "DSX: active": "DSX: etkin",
+    "DSX: off": "DSX: kapalı",
+
     # --- system tab controller block ---
     "Controller": "Kumanda",
     "Lock to controller": "Kumandaya kilitle",

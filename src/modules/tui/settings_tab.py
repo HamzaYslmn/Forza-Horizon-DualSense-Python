@@ -61,6 +61,18 @@ SETTING_SECTIONS = [
 ]
 
 SYSTEM_SECTIONS = [
+    ("DSX", [
+        ("use_dsx", "DSX integration", None, None,
+         "Send triggers to DualSenseX via UDP instead of HID. "
+         "Prevents conflicts when DSX (Steam) is running. "
+         "Toggling restarts the backend."),
+    ]),
+    ("DSX connection", [
+        ("dsx_host", "Host", None, None,
+         "Default 127.0.0.1. Match the host in DSX settings."),
+        ("dsx_port", "Port", 1, 65535,
+         "Default 6969. Match the port in DSX settings."),
+    ]),
     ("Telemetry (applies on next launch)", [
         ("udp_port", "UDP port", 1, 65535,
          "In Forza HUD: host 127.0.0.1 (try ::1 if it fails)."),
@@ -134,6 +146,10 @@ class SettingsTab(VerticalScroll):
         max-width: 14;
         height: 3;
     }
+    SettingsTab #set-dsx_host, SystemTab #set-dsx_host {
+        width: 16;
+        max-width: 16;
+    }
     SettingsTab Label.hint, SystemTab Label.hint {
         width: 1fr;
         height: auto;
@@ -170,11 +186,9 @@ class SettingsTab(VerticalScroll):
                     input_type = "integer" if isinstance(value, int) else "number"
                     # MARK: integer sliders snap to 5; float sliders snap to span/200
                     step = 5.0 if isinstance(value, int) else None
-                    # MARK: UDP port has no meaningful "tune by feel" - skip the slider
-                    if attr == "udp_port":
+                    if attr in ("udp_port", "dsx_port"):
                         with Horizontal(classes="row"):
                             yield Label(t(label), classes="field")
-                            # MARK: flex spacer keeps the input aligned with the slider column
                             yield Label("", classes="spacer")
                             yield Input(
                                 value=_format_value(value),
@@ -199,6 +213,8 @@ class SettingsTab(VerticalScroll):
                 else:
                     with Horizontal(classes="row"):
                         yield Label(t(label), classes="field")
+                        if attr == "dsx_host":
+                            yield Label("", classes="spacer")
                         yield Input(value=_format_value(value), id=f"set-{attr}")
                 if hint:
                     yield Label(t(hint), classes="hint")
@@ -334,7 +350,11 @@ class SettingsTab(VerticalScroll):
         ds = getattr(self.app, "_ds", None)
         if ds is None:
             return
-        if attr == "enable_reconnect":
+        if attr == "enable_reconnect" and hasattr(ds, "set_reconnect_enabled"):
             ds.set_reconnect_enabled(value)
-        elif attr == "reconnect_interval_s":
+        elif attr == "reconnect_interval_s" and hasattr(ds, "set_reconnect_interval"):
             ds.set_reconnect_interval(value)
+        elif attr == "use_dsx":
+            self.app._restart_backend()
+        elif attr in ("dsx_host", "dsx_port") and getattr(self.app.settings, "use_dsx", False):
+            self.app._restart_backend()

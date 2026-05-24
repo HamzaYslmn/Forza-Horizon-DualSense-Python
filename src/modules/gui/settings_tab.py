@@ -64,6 +64,18 @@ SETTING_SECTIONS = [
 ]
 
 SYSTEM_SECTIONS = [
+    ("DSX", [
+        ("use_dsx", "DSX integration", None, None,
+         "Send triggers to DualSenseX via UDP instead of HID. "
+         "Prevents conflicts when DSX (Steam) is running. "
+         "Toggling restarts the backend."),
+    ]),
+    ("DSX connection", [
+        ("dsx_host", "Host", None, None,
+         "Default 127.0.0.1. Match the host in DSX settings."),
+        ("dsx_port", "Port", 1, 65535,
+         "Default 6969. Match the port in DSX settings."),
+    ]),
     ("Telemetry (applies on next launch)", [
         ("udp_port", "UDP port", 1, 65535,
          "In Forza HUD: host 127.0.0.1 (try ::1 if it fails)."),
@@ -148,7 +160,7 @@ class SettingsTab(ctk.CTkFrame):
             if isinstance(value, bool):
                 self._add_switch_row(card, attr, label, hint)
             elif isinstance(lo, (int, float)) and isinstance(hi, (int, float)):
-                if attr == "udp_port":
+                if attr in ("udp_port", "dsx_port"):
                     self._add_entry_only_row(card, attr, label, value, hint)
                 else:
                     self._add_slider_row(card, attr, label, value, lo, hi, hint)
@@ -159,7 +171,8 @@ class SettingsTab(ctk.CTkFrame):
     # MARK: row helpers -----------------------------------------------------
 
     def _add_switch_row(self, parent, attr: str, label: str, hint: str):
-        row = W.FieldRow(parent, t(label), hint=t(hint) if hint else "")
+        hw = self.app.px(500) if attr == "use_dsx" else 0
+        row = W.FieldRow(parent, t(label), hint=t(hint) if hint else "", hint_wrap=hw)
         row.pack(fill="x", padx=T.PAD_MD, pady=T.PAD_XS)
         sw = ctk.CTkSwitch(row.controls, text="",
                            command=lambda a=attr: self._on_switch(a))
@@ -297,10 +310,14 @@ class SettingsTab(ctk.CTkFrame):
         ds = getattr(self.app, "_ds", None)
         if ds is None:
             return
-        if attr == "enable_reconnect":
+        if attr == "enable_reconnect" and hasattr(ds, "set_reconnect_enabled"):
             ds.set_reconnect_enabled(value)
-        elif attr == "reconnect_interval_s":
+        elif attr == "reconnect_interval_s" and hasattr(ds, "set_reconnect_interval"):
             ds.set_reconnect_interval(value)
+        elif attr == "use_dsx":
+            self.app._restart_backend()
+        elif attr in ("dsx_host", "dsx_port") and getattr(self.app.settings, "use_dsx", False):
+            self.app._restart_backend()
 
     # MARK: refresh ---------------------------------------------------------
 

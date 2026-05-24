@@ -27,7 +27,7 @@ import webbrowser
 import customtkinter as ctk
 
 from lang import set_language, t
-from modules import dualsense, forzahorizon, loop
+from modules import dualsense, dsx, forzahorizon, loop
 from modules.config import preferences, profiles
 from modules.config.preferences import _version
 from modules.dualsense.adaptive_trigger import off, vibrate
@@ -418,19 +418,29 @@ class TriggerGUI:
         s = self.settings
         try:
             preferences.load(s)
-            self._ds = dualsense.DualSense(
-                startup_pulse_force=s.startup_pulse_force,
-                enable_startup_pulse=s.enable_startup_pulse,
-                reconnect_interval_s=s.reconnect_interval_s,
-                enable_reconnect=s.enable_reconnect,
-                controller_lock_serial=s.controller_lock_serial,
-            )
+            if s.use_dsx:
+                self._ds = dsx.DSXClient(
+                    host=s.dsx_host,
+                    port=s.dsx_port,
+                    startup_pulse_force=s.startup_pulse_force,
+                    enable_startup_pulse=s.enable_startup_pulse,
+                )
+            else:
+                self._ds = dualsense.DualSense(
+                    startup_pulse_force=s.startup_pulse_force,
+                    enable_startup_pulse=s.enable_startup_pulse,
+                    reconnect_interval_s=s.reconnect_interval_s,
+                    enable_reconnect=s.enable_reconnect,
+                    controller_lock_serial=s.controller_lock_serial,
+                )
             self._ds.open()
             self._listener_cm = forzahorizon.UDPListener(s.udp_host, s.udp_port, s.udp_timeout)
             self._listener = self._listener_cm.__enter__()
             log.info("Listening on %s:%d", s.udp_host, s.udp_port)
             log.info("In game: HUD & Gameplay -> Data Out: ON, IP %s, Port %d",
                      s.udp_host, s.udp_port)
+            if s.use_dsx:
+                log.info("DSX mode: sending triggers to %s:%d", s.dsx_host, s.dsx_port)
             self._thread = threading.Thread(target=self._run_loop, daemon=True)
             self._thread.start()
         except OSError:
@@ -439,6 +449,27 @@ class TriggerGUI:
         except Exception as exc:
             log.exception("Backend startup failed")
             self.status_pill.set_label(t("Backend failed: {error}").format(error=exc))
+
+    def _restart_backend(self):
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=2.0)
+        if self._listener_cm:
+            try:
+                self._listener_cm.__exit__(None, None, None)
+            except Exception:
+                pass
+        if self._ds:
+            try:
+                self._ds.close()
+            except Exception:
+                pass
+        self._stop = threading.Event()
+        self._ds = None
+        self._listener_cm = None
+        self._listener = None
+        self._thread = None
+        self.root.after(0, self._start_backend)
 
     def _run_loop(self):
         try:
@@ -462,7 +493,12 @@ class TriggerGUI:
 
     def _refresh_status(self):
         ds = self._ds
-        if ds and getattr(ds, "persistent", False):
+        if self.settings.use_dsx:
+            if ds and ds.connected:
+                color, label = T.BLUE, t("DSX: active")
+            else:
+                color, label = T.RED, t("DSX: off")
+        elif ds and getattr(ds, "persistent", False):
             color, label = T.GREEN, f"{t('connected')} - {t('latched')}"
         elif ds and ds.connected:
             color, label = T.GREEN, t("connected")

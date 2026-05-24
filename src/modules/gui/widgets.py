@@ -171,7 +171,7 @@ class FieldRow(ctk.CTkFrame):
     """
     LABEL_W = 220  # logical px; CTk scales for DPI
 
-    def __init__(self, parent, label: str, hint: str = "", **kw):
+    def __init__(self, parent, label: str, hint: str = "", hint_wrap: int = 0, **kw):
         kw.setdefault("fg_color", "transparent")
         super().__init__(parent, **kw)
         self.grid_columnconfigure(1, weight=1)
@@ -182,7 +182,7 @@ class FieldRow(ctk.CTkFrame):
         self.controls = ctk.CTkFrame(self, fg_color="transparent")
         self.controls.grid(row=0, column=1, sticky="ew")
         if hint:
-            Hint(self, hint).grid(row=1, column=1, sticky="w",
+            Hint(self, hint, wrap=hint_wrap if hint_wrap else 0).grid(row=1, column=1, sticky="w",
                                   pady=(T.PAD_XS, 0))
 
 

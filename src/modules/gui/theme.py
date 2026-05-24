@@ -30,6 +30,7 @@ GREEN  = ("#1f8a3a", "#23a55a")
 YELLOW = ("#b45309", "#f0b132")
 RED    = ("#b91c1c", "#f23f43")
 PINK   = "#ff5fa2"
+BLUE   = ("#1e90ff", "#1e90ff")  # dodgerblue - DSX status
 
 # Spacing tokens
 PAD_XS = 4

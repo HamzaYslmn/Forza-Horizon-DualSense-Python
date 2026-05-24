@@ -53,58 +53,79 @@ class SystemTab(SettingsTab):
         super().__init__(parent, app)
         if sentinel_path() is not None:
             apply_sentinel(self.settings.check_for_updates)
+        self._sync_controller_visibility()
         threading.Thread(target=self._enumerate_async, daemon=True).start()
 
     def _build(self):
         self._build_controller_card()
+        self._build_dsx_note()
         self._build_updates_card()
-        # Standard sections from SYSTEM_SECTIONS
         super()._build()
 
     # MARK: controller card -------------------------------------------------
 
     def _build_controller_card(self):
-        card = W.Card(self._scroll)
-        card.pack(fill="x", pady=(0, T.PAD_MD))
-        W.H2(card, t("Controller")).pack(anchor="w", padx=T.PAD_MD,
+        self._controller_card = W.Card(self._scroll)
+        self._controller_card.pack(fill="x", pady=(0, T.PAD_MD))
+        W.H2(self._controller_card, t("Controller")).pack(anchor="w", padx=T.PAD_MD,
                                          pady=(T.PAD_MD, T.PAD_XS))
-        W.Hint(card, t("Lock the app to a specific DualSense, or let it pick the first one.")
+        W.Hint(self._controller_card, t("Lock the app to a specific DualSense, or let it pick the first one.")
                ).pack(anchor="w", padx=T.PAD_MD, pady=(0, T.PAD_SM))
 
         self._lock_var = ctk.StringVar(value=self.settings.controller_lock_serial or "")
-        self._radio_holder = W.FastScroll(card, height=140,
+        self._radio_holder = W.FastScroll(self._controller_card, height=140,
                                                     fg_color=T.BG_INPUT,
                                                     corner_radius=6)
         self._radio_holder.pack(fill="x", padx=T.PAD_MD, pady=(0, T.PAD_SM))
         self._render_radio_buttons()
 
-        actions = ctk.CTkFrame(card, fg_color="transparent")
+        actions = ctk.CTkFrame(self._controller_card, fg_color="transparent")
         actions.pack(fill="x", padx=T.PAD_MD, pady=(0, T.PAD_MD))
         W.SecondaryButton(actions, t("Rescan"), self._on_rescan, width=120
                           ).pack(side="left")
 
+    def _build_dsx_note(self):
+        self._dsx_note = W.Hint(self._scroll,
+            t("DSX is active - controller managed by DSX. "
+              "Disable DSX to select a controller here."),
+            wrap=self.app.px(640),
+        )
+        self._dsx_note.pack(fill="x", padx=T.PAD_MD, pady=(0, T.PAD_MD))
+
+    def _sync_controller_visibility(self):
+        try:
+            if self.settings.use_dsx:
+                self._controller_card.pack_forget()
+                self._dsx_note.pack(fill="x", padx=T.PAD_MD, pady=(0, T.PAD_MD))
+            else:
+                self._dsx_note.pack_forget()
+                self._controller_card.pack(fill="x", pady=(0, T.PAD_MD),
+                                           before=self._updates_card)
+        except Exception:
+            pass
+
     def _build_updates_card(self):
-        card = W.Card(self._scroll)
-        card.pack(fill="x", pady=(0, T.PAD_MD))
-        W.H2(card, t("Updates")).pack(anchor="w", padx=T.PAD_MD,
+        self._updates_card = W.Card(self._scroll)
+        self._updates_card.pack(fill="x", pady=(0, T.PAD_MD))
+        W.H2(self._updates_card, t("Updates")).pack(anchor="w", padx=T.PAD_MD,
                                       pady=(T.PAD_MD, T.PAD_SM))
         if sentinel_path() is None:
             W.Danger(
-                card,
+                self._updates_card,
                 t("ZUV not found: this build is not running inside a ZUV bundle "
                   "(ZUV_CACHE_ROOT env var is missing), so the update toggle has "
                   "nothing to control. Run the bundled .zuv.py to manage updates."),
                 wrap=self.app.px(640),
             ).pack(fill="x", padx=T.PAD_MD, pady=(0, T.PAD_MD))
             return
-        self._update_switch = ctk.CTkSwitch(card,
+        self._update_switch = ctk.CTkSwitch(self._updates_card,
                                             text=t("Check for updates at launch"),
                                             command=self._on_update_toggle)
         if self.settings.check_for_updates:
             self._update_switch.select()
         self._update_switch.pack(anchor="w", padx=T.PAD_MD, pady=(0, T.PAD_XS))
         W.Hint(
-            card,
+            self._updates_card,
             t("When off, ZUV will not prompt for updates on startup. "
               "Toggle on and restart the app to check for a new release."),
             wrap=self.app.px(640),
@@ -190,13 +211,18 @@ class SystemTab(SettingsTab):
             preferences.save(self.settings)
             log.info("controller_lock_serial = %r", new)
         ds = getattr(self.app, "_ds", None)
-        if ds is not None:
+        if ds is not None and hasattr(ds, "set_selection"):
             ds.set_selection(new)
             if new and new != self._attached_serial():
                 ds.force_reconnect()
         threading.Thread(target=self._enumerate_async, daemon=True).start()
 
     # MARK: updates ---------------------------------------------------------
+
+    def _on_switch(self, attr: str):
+        super()._on_switch(attr)
+        if attr == "use_dsx":
+            self._sync_controller_visibility()
 
     def _on_update_toggle(self):
         if self._update_switch is None or self.app._refreshing:

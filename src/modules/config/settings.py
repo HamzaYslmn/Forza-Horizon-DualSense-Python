@@ -104,6 +104,12 @@ class Settings:
     # MARK: System - updates
     check_for_updates: bool = False           # ZUV loader checks GitHub for a new release at launch
 
+    # MARK: DSX
+    # When enabled, trigger data goes to DSX via UDP instead of HID.
+    use_dsx: bool = False
+    dsx_host: str = "127.0.0.1"
+    dsx_port: int = 6969
+
     # MARK: System - language
     # Module name in `lang/` (en, tr, zh, ja). Unknown codes fall back to English.
     language: str = "en"

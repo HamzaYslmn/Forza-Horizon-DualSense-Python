@@ -88,6 +88,24 @@ STRINGS = {
     "Auto-exit when the game closes": "游戏关闭时自动退出",
     "Game-watch check interval (s)": "游戏监视间隔 (秒)",
 
+    # --- DSX ---
+    "DSX": "DSX",
+    "DSX integration": "DSX 集成",
+    "Send triggers to DualSenseX via UDP instead of HID. Prevents conflicts when DSX (Steam) is running. Toggling restarts the backend.":
+        "通过 UDP 将触发器数据发送到 DualSenseX，而非 HID。"
+        "当 DSX（Steam）运行时避免冲突。切换将重启后端。",
+    "DSX connection": "DSX 连接",
+    "Host": "主机",
+    "Port": "端口",
+    "Default 127.0.0.1. Match the host in DSX settings.":
+        "默认 127.0.0.1。需与 DSX 设置中的主机匹配。",
+    "Default 6969. Match the port in DSX settings.":
+        "默认 6969。需与 DSX 设置中的端口匹配。",
+    "DSX is active - controller managed by DSX. Disable DSX to select a controller here.":
+        "DSX 已启用 - 手柄由 DSX 管理。禁用 DSX 以在此选择手柄。",
+    "DSX: active": "DSX: 已启用",
+    "DSX: off": "DSX: 已关闭",
+
     # --- system tab controller block ---
     "Controller": "手柄",
     "Lock to controller": "锁定到手柄",

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv("./data/dev.env")
 
 
-from modules import dualsense, forzahorizon, setup_logging, loop
+from modules import dualsense, dsx, forzahorizon, setup_logging, loop
 from modules.config import paths, preferences, Settings
 
 log = logging.getLogger("fhds")
@@ -32,18 +32,28 @@ def _excepthook(exc_type, exc, tb):
 
 
 def run(s: Settings) -> None:
-    ds = dualsense.DualSense(
-        startup_pulse_force=s.startup_pulse_force,
-        enable_startup_pulse=s.enable_startup_pulse,
-        reconnect_interval_s=s.reconnect_interval_s,
-        enable_reconnect=s.enable_reconnect,
-        controller_lock_serial=s.controller_lock_serial,
-    )
+    if s.use_dsx:
+        ds = dsx.DSXClient(
+            host=s.dsx_host,
+            port=s.dsx_port,
+            startup_pulse_force=s.startup_pulse_force,
+            enable_startup_pulse=s.enable_startup_pulse,
+        )
+    else:
+        ds = dualsense.DualSense(
+            startup_pulse_force=s.startup_pulse_force,
+            enable_startup_pulse=s.enable_startup_pulse,
+            reconnect_interval_s=s.reconnect_interval_s,
+            enable_reconnect=s.enable_reconnect,
+            controller_lock_serial=s.controller_lock_serial,
+        )
     ds.open()
     try:
         with forzahorizon.UDPListener(s.udp_host, s.udp_port, s.udp_timeout) as listener:
             log.info("Listening on %s:%d | Ctrl+C to quit", s.udp_host, s.udp_port)
             log.info("  In game: HUD & Gameplay -> Data Out: ON, IP 127.0.0.1, Port %d", s.udp_port)
+            if s.use_dsx:
+                log.info("  DSX mode: sending triggers to %s:%d", s.dsx_host, s.dsx_port)
             loop.run(ds, listener, s)
     finally:
         ds.close()

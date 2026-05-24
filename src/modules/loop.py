@@ -21,6 +21,7 @@ def run(ds, listener, s, stop_event=None):
     pkt_count = 0
 
     watcher = ProcessWatcher(s.game_process_name_contains, s.game_poll_interval_s)
+    dsx_mode = type(ds).__name__ == "DSXClient"
 
     while True:
         if stop_event is not None and stop_event.is_set():
@@ -55,7 +56,8 @@ def run(ds, listener, s, stop_event=None):
         last_pkt = now
         listener.lost = False
         if pkt_count == 1:
-            log.info("First packet from %s:%d (%d bytes)", addr[0], addr[1], len(pkt))
+            log.info("First packet from %s:%d (%d bytes)%s", addr[0], addr[1], len(pkt),
+                     " [DSX]" if dsx_mode else "")
 
         try:
             t = forzahorizon.parse_packet(pkt)

@@ -88,6 +88,24 @@ STRINGS = {
     "Auto-exit when the game closes": "ゲーム終了時に自動終了",
     "Game-watch check interval (s)": "ゲーム監視の確認間隔 (秒)",
 
+    # --- DSX ---
+    "DSX": "DSX",
+    "DSX integration": "DSX 連携",
+    "Send triggers to DualSenseX via UDP instead of HID. Prevents conflicts when DSX (Steam) is running. Toggling restarts the backend.":
+        "HID の代わりに UDP でトリガーを DualSenseX に送信。"
+        "DSX (Steam) 実行中の競合を防止。切り替えでバックエンドを再起動。",
+    "DSX connection": "DSX 接続",
+    "Host": "ホスト",
+    "Port": "ポート",
+    "Default 127.0.0.1. Match the host in DSX settings.":
+        "デフォルト 127.0.0.1。DSX 設定のホストと一致させる必要があります。",
+    "Default 6969. Match the port in DSX settings.":
+        "デフォルト 6969。DSX 設定のポートと一致させる必要があります。",
+    "DSX is active - controller managed by DSX. Disable DSX to select a controller here.":
+        "DSX が有効 - コントローラーは DSX が管理中。コントローラーを選択するには DSX を無効にしてください。",
+    "DSX: active": "DSX: 有効",
+    "DSX: off": "DSX: オフ",
+
     # --- system tab controller block ---
     "Controller": "コントローラー",
     "Lock to controller": "コントローラーに固定",

@@ -10,6 +10,7 @@ from textual.widgets import Button, Header, Input, Static, Switch, TabbedContent
 
 from lang import set_language, t
 from modules import dualsense, loop, forzahorizon
+from modules.dsx import DSXClient
 from modules.config import preferences, profiles
 from modules.dualsense.adaptive_trigger import off, vibrate
 from modules.config.preferences import _version
@@ -161,20 +162,29 @@ class TriggerTUI(App):
     def _start_backend(self):
         s = self.settings
         try:
-            # MARK: resync prefs - user may have switched profile before this deferred call ran
             preferences.load(s)
-            self._ds = dualsense.DualSense(
-                startup_pulse_force=s.startup_pulse_force,
-                enable_startup_pulse=s.enable_startup_pulse,
-                reconnect_interval_s=s.reconnect_interval_s,
-                enable_reconnect=s.enable_reconnect,
-                controller_lock_serial=s.controller_lock_serial,
-            )
+            if s.use_dsx:
+                self._ds = DSXClient(
+                    host=s.dsx_host,
+                    port=s.dsx_port,
+                    startup_pulse_force=s.startup_pulse_force,
+                    enable_startup_pulse=s.enable_startup_pulse,
+                )
+            else:
+                self._ds = dualsense.DualSense(
+                    startup_pulse_force=s.startup_pulse_force,
+                    enable_startup_pulse=s.enable_startup_pulse,
+                    reconnect_interval_s=s.reconnect_interval_s,
+                    enable_reconnect=s.enable_reconnect,
+                    controller_lock_serial=s.controller_lock_serial,
+                )
             self._ds.open()
             self._listener_cm = forzahorizon.UDPListener(s.udp_host, s.udp_port, s.udp_timeout)
             self._listener = self._listener_cm.__enter__()
             log.info("Listening on %s:%d", s.udp_host, s.udp_port)
             log.info("In game: HUD & Gameplay -> Data Out: ON, IP %s, Port %d", s.udp_host, s.udp_port)
+            if s.use_dsx:
+                log.info("DSX mode: sending triggers to %s:%d", s.dsx_host, s.dsx_port)
             self._thread = threading.Thread(target=self._run_loop, daemon=True)
             self._thread.start()
         except OSError as exc:
@@ -190,11 +200,25 @@ class TriggerTUI(App):
         try:
             loop.run(self._ds, self._listener, self.settings, stop_event=self._stop)
         except Exception:
-            # An unexpected error here would otherwise kill the backend thread
             log.exception("Telemetry loop crashed")
         finally:
             if not self._stop.is_set():
                 self.call_from_thread(self.exit)
+
+    def _restart_backend(self):
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=2.0)
+        if self._listener_cm:
+            self._listener_cm.__exit__(None, None, None)
+        if self._ds:
+            self._ds.close()
+        self._stop = threading.Event()
+        self._ds = None
+        self._listener_cm = None
+        self._listener = None
+        self._thread = None
+        self.call_after_refresh(self._start_backend)
 
     @staticmethod
     def _open_url(url: str) -> None:
@@ -209,9 +233,12 @@ class TriggerTUI(App):
     # --- topbar / logs bridge -----------------------------------------------
 
     def refresh_status(self):
-        connected = bool(self._ds and self._ds.connected)
-        state = f"[bold green]{t('connected')}[/]" if connected else f"[bold red]{t('waiting')}[/]"
-        self.query_one("#status", Static).update(f"DualSense: {state}")
+        if self.settings.use_dsx:
+            state = "[bold dodgerblue]DSX: active[/]" if (self._ds and self._ds.connected) else "[bold red]DSX: off[/]"
+        else:
+            connected = bool(self._ds and self._ds.connected)
+            state = f"[bold green]{t('connected')}[/]" if connected else f"[bold red]{t('waiting')}[/]"
+        self.query_one("#status", Static).update(state)
 
     def refresh_profile(self):
         """Update the active profile label. Cheap path is called only on profile

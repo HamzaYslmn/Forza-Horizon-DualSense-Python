@@ -40,6 +40,9 @@ GLOBAL_FIELDS = frozenset({
     "check_for_updates",
     "language",
     "controller_lock_serial",
+    "use_dsx",
+    "dsx_host",
+    "dsx_port",
 })
 
 _SIMPLE = (bool, int, float, str)
@@ -132,6 +135,52 @@ def _migrate_legacy(raw: dict, s) -> None:
         raw.pop(k, None)
 
 
+_BONUS_PROFILES = {
+    "Firm": {
+        "brake_baseline_force": 30, "brake_max_force": 140,
+        "brake_curve": 4.5,
+        "throttle_baseline_force": 2, "throttle_max_force": 16,
+        "handbrake_bonus": 90,
+        "abs_amp": 40, "abs_slip_ratio_threshold": 0.8,
+        "abs_combined_slip_threshold": 0.8,
+        "rev_limit_amp": 25, "wheelspin_amp": 6,
+        "idle_amp_high": 50,
+    },
+    "Stiff": {
+        "brake_baseline_force": 40, "brake_max_force": 200,
+        "brake_curve": 3.5,
+        "throttle_baseline_force": 5, "throttle_max_force": 28,
+        "throttle_curve": 4.0,
+        "handbrake_bonus": 120,
+        "abs_brake_threshold": 60, "abs_amp": 65, "abs_freq": 12,
+        "abs_slip_ratio_threshold": 0.6,
+        "abs_combined_slip_threshold": 0.6,
+        "rev_limit_ratio": 0.90, "rev_limit_amp": 40, "rev_limit_freq": 35,
+        "wheelspin_amp": 10,
+        "idle_amp_high": 70,
+        "gear_shift_freq": 12,
+    },
+    "Heavy": {
+        "brake_baseline_force": 55, "brake_max_force": 255,
+        "brake_curve": 3.0,
+        "throttle_baseline_force": 8, "throttle_max_force": 45,
+        "throttle_curve": 3.5,
+        "handbrake_bonus": 150,
+        "enable_brake_static_wall": True,
+        "brake_static_wall_at": 192, "brake_static_wall_force": 255,
+        "abs_brake_threshold": 50, "abs_amp": 100, "abs_freq": 15,
+        "abs_slip_ratio_threshold": 0.5,
+        "abs_combined_slip_threshold": 0.5,
+        "rev_limit_ratio": 0.88, "rev_limit_amp": 60, "rev_limit_freq": 40,
+        "rev_limit_hold_ms": 150.0,
+        "wheelspin_amp": 16,
+        "idle_amp_low": 5, "idle_amp_high": 100,
+        "gear_shift_freq": 15, "gear_shift_duration_ms": 80.0,
+        "wall_zones": 3,
+    },
+}
+
+
 def _ensure_active(raw: dict, s) -> dict:
     """Guarantee raw has a profiles dict, valid active_profile, and globals."""
     _migrate_legacy(raw, s)
@@ -140,9 +189,18 @@ def _ensure_active(raw: dict, s) -> dict:
     raw.setdefault("globals", {})
     if not raw["profiles"]:
         raw["profiles"][DEFAULT_PROFILE_NAME] = _profile_fields(s)
+        for name, overrides in _BONUS_PROFILES.items():
+            snap = _profile_fields(s)
+            snap.update(overrides)
+            raw["profiles"][name] = snap
         raw["active_profile"] = DEFAULT_PROFILE_NAME
     elif raw["active_profile"] not in raw["profiles"]:
         raw["active_profile"] = sorted(raw["profiles"].keys(), key=str.lower)[0]
+    for name, overrides in _BONUS_PROFILES.items():
+        if name not in raw["profiles"]:
+            snap = _profile_fields(s)
+            snap.update(overrides)
+            raw["profiles"][name] = snap
     # Migrate global fields out of per-profile snapshots (older versions stored
     # them there). Active profile wins so the user's in-use value carries over.
     active_snap = raw["profiles"].get(raw["active_profile"], {})

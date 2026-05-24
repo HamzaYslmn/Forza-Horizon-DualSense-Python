@@ -2,7 +2,7 @@
 import logging
 import os
 
-from . import dualsense, forzahorizon, loop
+from . import dualsense, dsx, forzahorizon, loop
 
 # MARK: Console logging setup (--headless mode only, TUI wires its own handler)
 def setup_logging(debug: bool = False) -> None:
