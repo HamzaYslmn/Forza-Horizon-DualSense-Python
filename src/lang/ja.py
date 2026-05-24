@@ -91,9 +91,10 @@ STRINGS = {
     # --- DSX ---
     "DSX": "DSX",
     "DSX integration": "DSX 連携",
-    "Send triggers to DualSenseX via UDP instead of HID. Prevents conflicts when DSX (Steam) is running. Toggling restarts the backend.":
-        "HID の代わりに UDP でトリガーを DualSenseX に送信。"
-        "DSX (Steam) 実行中の競合を防止。切り替えでバックエンドを再起動。",
+    "Send triggers to DualSenseX via UDP instead of HID.\nPrevents conflicts when DSX (Steam) is running.\nToggling restarts the backend.":
+        "HID の代わりに UDP でトリガーを DualSenseX に送信。\n"
+        "DSX (Steam) 実行中の競合を防止。\n"
+        "切り替えでバックエンドを再起動。",
     "DSX connection": "DSX 接続",
     "Host": "ホスト",
     "Port": "ポート",

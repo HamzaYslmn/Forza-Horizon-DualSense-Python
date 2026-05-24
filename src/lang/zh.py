@@ -91,9 +91,10 @@ STRINGS = {
     # --- DSX ---
     "DSX": "DSX",
     "DSX integration": "DSX 集成",
-    "Send triggers to DualSenseX via UDP instead of HID. Prevents conflicts when DSX (Steam) is running. Toggling restarts the backend.":
-        "通过 UDP 将触发器数据发送到 DualSenseX，而非 HID。"
-        "当 DSX（Steam）运行时避免冲突。切换将重启后端。",
+    "Send triggers to DualSenseX via UDP instead of HID.\nPrevents conflicts when DSX (Steam) is running.\nToggling restarts the backend.":
+        "通过 UDP 将触发器数据发送到 DualSenseX，而非 HID。\n"
+        "当 DSX（Steam）运行时避免冲突。\n"
+        "切换将重启后端。",
     "DSX connection": "DSX 连接",
     "Host": "主机",
     "Port": "端口",

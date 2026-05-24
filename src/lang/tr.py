@@ -91,9 +91,9 @@ STRINGS = {
     # --- DSX ---
     "DSX": "DSX",
     "DSX integration": "DSX entegrasyonu",
-    "Send triggers to DualSenseX via UDP instead of HID. Prevents conflicts when DSX (Steam) is running. Toggling restarts the backend.":
-        "Tetikleri HID yerine UDP üzerinden DualSenseX'e gönder. "
-        "DSX (Steam) çalışırken çakışmaları önler. "
+    "Send triggers to DualSenseX via UDP instead of HID.\nPrevents conflicts when DSX (Steam) is running.\nToggling restarts the backend.":
+        "Tetikleri HID yerine UDP üzerinden DualSenseX'e gönder.\n"
+        "DSX (Steam) çalışırken çakışmaları önler.\n"
         "Değiştirmek arka ucu yeniden başlatır.",
     "DSX connection": "DSX bağlantısı",
     "Host": "Host",

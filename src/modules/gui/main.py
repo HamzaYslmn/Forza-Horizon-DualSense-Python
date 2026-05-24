@@ -84,6 +84,7 @@ class TriggerGUI:
         self._refreshing = False
         self._refresh_callbacks: list = []
         self._log_queue: queue.Queue = queue.Queue(maxsize=4000)
+        self._skip_startup_pulse = False
 
         # Theme + DPI
         ctk.set_appearance_mode("dark")
@@ -376,10 +377,6 @@ class TriggerGUI:
         if self._tearing_down:
             return
         self._tearing_down = True
-        root = logging.getLogger()
-        for h in list(root.handlers):
-            if isinstance(h, _QueueLogHandler):
-                root.removeHandler(h)
         self._stop.set()
         if self._thread:
             self._thread.join(timeout=2.0)
@@ -393,6 +390,10 @@ class TriggerGUI:
                 self._ds.close()
             except Exception:
                 pass
+        root = logging.getLogger()
+        for h in list(root.handlers):
+            if isinstance(h, _QueueLogHandler):
+                root.removeHandler(h)
 
     def _install_log_handler(self):
         root = logging.getLogger()
@@ -416,6 +417,8 @@ class TriggerGUI:
 
     def _start_backend(self):
         s = self.settings
+        skip_pulse = self._skip_startup_pulse
+        self._skip_startup_pulse = False
         try:
             preferences.load(s)
             if s.use_dsx:
@@ -423,12 +426,12 @@ class TriggerGUI:
                     host=s.dsx_host,
                     port=s.dsx_port,
                     startup_pulse_force=s.startup_pulse_force,
-                    enable_startup_pulse=s.enable_startup_pulse,
+                    enable_startup_pulse=s.enable_startup_pulse and not skip_pulse,
                 )
             else:
                 self._ds = dualsense.DualSense(
                     startup_pulse_force=s.startup_pulse_force,
-                    enable_startup_pulse=s.enable_startup_pulse,
+                    enable_startup_pulse=s.enable_startup_pulse and not skip_pulse,
                     reconnect_interval_s=s.reconnect_interval_s,
                     enable_reconnect=s.enable_reconnect,
                     controller_lock_serial=s.controller_lock_serial,
@@ -469,6 +472,7 @@ class TriggerGUI:
         self._listener_cm = None
         self._listener = None
         self._thread = None
+        self._skip_startup_pulse = True
         self.root.after(0, self._start_backend)
 
     def _run_loop(self):

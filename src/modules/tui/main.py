@@ -94,6 +94,7 @@ class TriggerTUI(App):
         self._listener = None
         self._status_timer = None
         self._tearing_down = False
+        self._skip_startup_pulse = False
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -141,16 +142,10 @@ class TriggerTUI(App):
         self.call_after_refresh(self._start_backend)
 
     def on_unmount(self):
-        # Detach our log handler before tearing down: backend shutdown emits
-        # log records, and routing those into the unmounted widgets raises.
         self._tearing_down = True
         if self._status_timer is not None:
             self._status_timer.stop()
             self._status_timer = None
-        root = logging.getLogger()
-        for h in list(root.handlers):
-            if isinstance(h, _LogHandler):
-                root.removeHandler(h)
         self._stop.set()
         if self._thread:
             self._thread.join(timeout=2.0)
@@ -158,9 +153,15 @@ class TriggerTUI(App):
             self._listener_cm.__exit__(None, None, None)
         if self._ds:
             self._ds.close()
+        root = logging.getLogger()
+        for h in list(root.handlers):
+            if isinstance(h, _LogHandler):
+                root.removeHandler(h)
 
     def _start_backend(self):
         s = self.settings
+        skip_pulse = self._skip_startup_pulse
+        self._skip_startup_pulse = False
         try:
             preferences.load(s)
             if s.use_dsx:
@@ -168,12 +169,12 @@ class TriggerTUI(App):
                     host=s.dsx_host,
                     port=s.dsx_port,
                     startup_pulse_force=s.startup_pulse_force,
-                    enable_startup_pulse=s.enable_startup_pulse,
+                    enable_startup_pulse=s.enable_startup_pulse and not skip_pulse,
                 )
             else:
                 self._ds = dualsense.DualSense(
                     startup_pulse_force=s.startup_pulse_force,
-                    enable_startup_pulse=s.enable_startup_pulse,
+                    enable_startup_pulse=s.enable_startup_pulse and not skip_pulse,
                     reconnect_interval_s=s.reconnect_interval_s,
                     enable_reconnect=s.enable_reconnect,
                     controller_lock_serial=s.controller_lock_serial,
@@ -218,6 +219,7 @@ class TriggerTUI(App):
         self._listener_cm = None
         self._listener = None
         self._thread = None
+        self._skip_startup_pulse = True
         self.call_after_refresh(self._start_backend)
 
     @staticmethod

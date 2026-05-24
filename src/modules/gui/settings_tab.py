@@ -66,8 +66,8 @@ SETTING_SECTIONS = [
 SYSTEM_SECTIONS = [
     ("DSX", [
         ("use_dsx", "DSX integration", None, None,
-         "Send triggers to DualSenseX via UDP instead of HID. "
-         "Prevents conflicts when DSX (Steam) is running. "
+         "Send triggers to DualSenseX via UDP instead of HID.\n"
+         "Prevents conflicts when DSX (Steam) is running.\n"
          "Toggling restarts the backend."),
     ]),
     ("DSX connection", [
