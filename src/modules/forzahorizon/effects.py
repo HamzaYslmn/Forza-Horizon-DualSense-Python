@@ -69,6 +69,7 @@ class TriggerAnimations:
         self._shift_until = 0.0
         self._rev_until = 0.0
         self._prev_boost = 0.0
+        self._turbo_last_fire = 0.0
 
     def arm_shift(self, t, s, now):
         gear = t["gear"]
@@ -140,7 +141,7 @@ class TriggerAnimations:
             return vibrate(45, min(255, int(amp * 2)))
         return vibrate(130, amp)                             # tarmac: sharp squeal
 
-    def turbo_lag(self, t, s):
+    def turbo_lag(self, t, s, now):
         if not s.enable_turbo_lag:
             self._prev_boost = t["boost"]
             return None
@@ -149,6 +150,9 @@ class TriggerAnimations:
         self._prev_boost = boost
         if delta < s.turbo_lag_threshold or boost < 0.1:
             return None
+        if now - self._turbo_last_fire < s.turbo_lag_cooldown_ms / 1000.0:
+            return None
+        self._turbo_last_fire = now
         amp = min(255, int(s.turbo_lag_amp * min(delta / 0.2, 1.0)))
         return vibrate(s.turbo_lag_freq, amp)
 
@@ -289,7 +293,7 @@ class Controller:
             return spin
 
         # 5. Turbo lag - boost climbing, brief deep rumble
-        turbo = self.anim.turbo_lag(t, s)
+        turbo = self.anim.turbo_lag(t, s, now)
         if turbo is not None:
             return turbo
 

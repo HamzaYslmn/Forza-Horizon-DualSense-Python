@@ -159,4 +159,7 @@ STRINGS = {
         "最大振动幅度。默认40。",
     "Min boost delta per tick to trigger. Default 0.05.":
         "每次触发最小增压变化量。默认0.05。",
+    "Cooldown (ms)": "冷却时间 (ms)",
+    "Min gap between rumbles. Suppresses steady-state jitter. Default 300.":
+        "振动间最短间隔。抑制稳态抖动。默认300。",
 }

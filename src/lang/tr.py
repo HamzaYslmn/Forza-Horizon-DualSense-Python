@@ -159,4 +159,7 @@ STRINGS = {
         "Maks titreşim genliği. Varsayılan 40.",
     "Min boost delta per tick to trigger. Default 0.05.":
         "Tetiklemek için tick başına min boost deltası. Varsayılan 0.05.",
+    "Cooldown (ms)": "Bekleme (ms)",
+    "Min gap between rumbles. Suppresses steady-state jitter. Default 300.":
+        "Gürültüler arası min boşluk. Kararlı durum titremesini bastırır. Varsayılan 300.",
 }
