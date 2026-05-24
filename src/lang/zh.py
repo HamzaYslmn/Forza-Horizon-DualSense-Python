@@ -134,4 +134,16 @@ STRINGS = {
         "0 = 关闭。在0 km/h时增加平坦阻力，逐渐衰减至正常。",
     "Speed where boost fully fades. Default 80.":
         "增益完全衰减的速度。默认80。",
+    "Surface brake resistance": "路面刹车阻力",
+    "Tarmac multiplier": "柏油路倍率",
+    "Dirt multiplier": "泥土路倍率",
+    "Gravel multiplier": "碎石路倍率",
+    "Softer brake on loose surfaces, firmer on tarmac.":
+        "松散路面刹车更软，柏油路更硬。",
+    "1.0 = unchanged. Scales final resistance force.":
+        "1.0 = 不变。缩放最终阻力力度。",
+    "Lower = softer brake on dirt. Default 0.5.":
+        "越低 = 泥土路刹车越软。默认0.5。",
+    "Lower = softer brake on gravel/water. Default 0.25.":
+        "越低 = 碎石/水面刹车越软。默认0.25。",
 }

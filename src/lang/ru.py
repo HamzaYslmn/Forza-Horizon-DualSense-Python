@@ -145,4 +145,16 @@ STRINGS = {
         "0 = выкл. Плоское сопротивление при 0 км/ч, затухая до нормы.",
     "Speed where boost fully fades. Default 80.":
         "Скорость, где усиление полностью затухает. По умолчанию 80.",
+    "Surface brake resistance": "Поверхностное торможение",
+    "Tarmac multiplier": "Множитель асфальта",
+    "Dirt multiplier": "Множитель грязи",
+    "Gravel multiplier": "Множитель гравия",
+    "Softer brake on loose surfaces, firmer on tarmac.":
+        "Мягкий тормоз на рыхлых поверхностях, жёсткий на асфальте.",
+    "1.0 = unchanged. Scales final resistance force.":
+        "1.0 = без изменений. Масштабирует итоговое сопротивление.",
+    "Lower = softer brake on dirt. Default 0.5.":
+        "Ниже = мягче тормоз на грязи. По умолчанию 0.5.",
+    "Lower = softer brake on gravel/water. Default 0.25.":
+        "Ниже = мягче тормоз на гравии/воде. По умолчанию 0.25.",
 }

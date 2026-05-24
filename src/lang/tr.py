@@ -134,4 +134,16 @@ STRINGS = {
         "0 = kapalı. 0 km/s'de düz direnç eklenir, normale kadar sönür.",
     "Speed where boost fully fades. Default 80.":
         "Takviyenin tamamen söndüğü hız. Varsayılan 80.",
+    "Surface brake resistance": "Yüzey freni direnci",
+    "Tarmac multiplier": "Asfalt çarpanı",
+    "Dirt multiplier": "Toprak çarpanı",
+    "Gravel multiplier": "Çakıl çarpanı",
+    "Softer brake on loose surfaces, firmer on tarmac.":
+        "Gevşek yüzeylerde daha yumuşak fren, asfaltta daha sert.",
+    "1.0 = unchanged. Scales final resistance force.":
+        "1.0 = değişmez. Son direnç kuvvetini ölçekler.",
+    "Lower = softer brake on dirt. Default 0.5.":
+        "Düşük = toprakta daha yumuşak fren. Varsayılan 0.5.",
+    "Lower = softer brake on gravel/water. Default 0.25.":
+        "Düşük = çakıl/suda daha yumuşak fren. Varsayılan 0.25.",
 }

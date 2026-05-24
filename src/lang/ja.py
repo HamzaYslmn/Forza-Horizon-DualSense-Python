@@ -134,4 +134,16 @@ STRINGS = {
         "0 = オフ。0 km/hで平坦な抵抗が追加され、通常まで減衰します。",
     "Speed where boost fully fades. Default 80.":
         "ブーストが完全に減衰する速度。デフォルト80。",
+    "Surface brake resistance": "路面ブレーキ抵抗",
+    "Tarmac multiplier": "ターマック乗数",
+    "Dirt multiplier": "ダート乗数",
+    "Gravel multiplier": "砂利乗数",
+    "Softer brake on loose surfaces, firmer on tarmac.":
+        "緩い路面ではブレーキが柔らかく、ターマックでは硬くなります。",
+    "1.0 = unchanged. Scales final resistance force.":
+        "1.0 = 変更なし。最終抵抗力をスケールします。",
+    "Lower = softer brake on dirt. Default 0.5.":
+        "低い = ダートでより柔らかいブレーキ。デフォルト0.5。",
+    "Lower = softer brake on gravel/water. Default 0.25.":
+        "低い = 砂利/水でより柔らかいブレーキ。デフォルト0.25。",
 }

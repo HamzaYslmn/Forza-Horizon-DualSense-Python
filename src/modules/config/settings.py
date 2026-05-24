@@ -33,6 +33,14 @@ class Settings:
     enable_handbrake_bonus: bool = True
     handbrake_bonus: int = 60                 # flat extra force while handbrake is engaged
 
+    # MARK: L2 surface-type brake
+    # Modulates brake resistance based on surface type.
+    # Tarmac = firm, dirt = softer, gravel = softest. Off by default.
+    enable_surface_brake: bool = False
+    surface_brake_tarmac: float = 1.0         # multiplier on tarmac (1.0 = unchanged)
+    surface_brake_dirt: float = 0.5           # multiplier on dirt
+    surface_brake_gravel: float = 0.25        # multiplier on gravel/water
+
     # MARK: L2 ABS pulse
     # Vibrates when tire slip crosses thresholds under hard braking.
     enable_abs: bool = True

@@ -31,6 +31,16 @@ SETTING_SECTIONS = [
         ("brake_static_wall_at", "Wall position on the trigger", 0, 255, ""),
         ("brake_static_wall_force", "Wall hardness", 0, 255, ""),
     ]),
+    ("Surface brake resistance", [
+        ("enable_surface_brake", "Surface brake resistance", None, None,
+         "Softer brake on loose surfaces, firmer on tarmac."),
+        ("surface_brake_tarmac", "Tarmac multiplier", 0.0, 2.0,
+         "1.0 = unchanged. Scales final resistance force."),
+        ("surface_brake_dirt", "Dirt multiplier", 0.0, 2.0,
+         "Lower = softer brake on dirt. Default 0.5."),
+        ("surface_brake_gravel", "Gravel multiplier", 0.0, 2.0,
+         "Lower = softer brake on gravel/water. Default 0.25."),
+    ]),
     ("Right trigger - Gas force", [
         ("throttle_baseline_force", "Resting stiffness", 0, 255, ""),
         ("throttle_max_force", "Hard-press stiffness", 0, 255, ""),
