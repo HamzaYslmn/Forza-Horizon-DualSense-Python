@@ -65,8 +65,10 @@ SETTING_SECTIONS = [
 
 SYSTEM_SECTIONS = [
     ("Telemetry (applies on next launch)", [
-        ("udp_port", "UDP port", 1, 65535,
-         "In Forza HUD: host 127.0.0.1 (try ::1 if it fails)."),
+        ("udp_host", "Bind address",  None, None,
+         "127.0.0.1 = local only (same PC).  0.0.0.0 = network (Moonlight / remote PC)."),
+        ("udp_port", "UDP port",      1, 65535,
+         "Match the port set in Forza: HUD & Gameplay → Data Out."),
     ]),
     ("Startup pulse", [
         ("startup_pulse_force", "Startup buzz strength", 0, 255, ""),
@@ -78,6 +80,12 @@ SYSTEM_SECTIONS = [
     ("Game detection", [
         ("exit_on_game_close", "Auto-exit when the game closes", None, None, ""),
         ("game_poll_interval_s", "Game-watch check interval (s)", 0.1, 60.0, ""),
+    ]),
+    ("Moonlight / streaming mode", [
+        ("moonlight_mode", "Moonlight mode (write-only — fixes controller conflict)", None, None,
+         "Enable when streaming via Moonlight. Skips reading from the controller so "
+         "FH DualSense does not compete with Moonlight for HID input reports. "
+         "Disconnect detection is disabled; trigger effects still work."),
     ]),
 ]
 

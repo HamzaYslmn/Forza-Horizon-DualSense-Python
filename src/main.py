@@ -38,6 +38,7 @@ def run(s: Settings) -> None:
         reconnect_interval_s=s.reconnect_interval_s,
         enable_reconnect=s.enable_reconnect,
         controller_lock_serial=s.controller_lock_serial,
+        disable_input_watchdog=s.moonlight_mode,
     )
     ds.open()
     try:
@@ -114,14 +115,14 @@ if __name__ == "__main__":
     else:
         ui_env = os.environ.get("UI", "").strip().lower()
         frozen = getattr(sys, "frozen", False)
-        # Precedence: --tui > --gui > UI env var > GUI if frozen EXE > TUI
+        # Precedence: --tui > --gui > UI env var > GUI if frozen or macOS > TUI
         if args.tui:
             run_tui(settings)
         elif args.gui or ui_env == "gui":
             run_gui(settings)
         elif ui_env == "tui":
             run_tui(settings)
-        elif frozen:
+        elif frozen or sys.platform == "darwin":
             run_gui(settings)
         else:
             run_tui(settings)

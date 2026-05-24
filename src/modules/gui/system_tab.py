@@ -42,7 +42,7 @@ class SystemTab(SettingsTab):
     SECTIONS = SYSTEM_SECTIONS
     SHOW_RESET = False
     PAGE_TITLE = "System"
-    PAGE_SUBTITLE = "Controller, updates, and app-level options."
+    PAGE_SUBTITLE = "Controller, background, updates, and app-level options."
 
     def __init__(self, parent, app):
         self._devices: list[dict] = []
@@ -50,6 +50,8 @@ class SystemTab(SettingsTab):
         self._radio_holder: "W.FastScroll | None" = None
         self._radio_buttons: list[ctk.CTkRadioButton] = []
         self._update_switch: ctk.CTkSwitch | None = None
+        self._bg_path_var: ctk.StringVar | None = None
+        self._bg_path_lbl: ctk.CTkLabel | None = None
         super().__init__(parent, app)
         if sentinel_path() is not None:
             apply_sentinel(self.settings.check_for_updates)
@@ -57,6 +59,7 @@ class SystemTab(SettingsTab):
 
     def _build(self):
         self._build_controller_card()
+        self._build_background_card()
         self._build_updates_card()
         # Standard sections from SYSTEM_SECTIONS
         super()._build()
@@ -82,6 +85,66 @@ class SystemTab(SettingsTab):
         actions.pack(fill="x", padx=T.PAD_MD, pady=(0, T.PAD_MD))
         W.SecondaryButton(actions, t("Rescan"), self._on_rescan, width=120
                           ).pack(side="left")
+
+    def _build_background_card(self):
+        card = W.Card(self._scroll)
+        card.pack(fill="x", pady=(0, T.PAD_MD))
+        W.H2(card, t("Background Image")).pack(anchor="w", padx=T.PAD_MD,
+                                               pady=(T.PAD_MD, T.PAD_XS))
+        W.Hint(
+            card,
+            t("Choose any image file. It will be blurred and darkened automatically."),
+            wrap=self.app.px(600),
+        ).pack(fill="x", padx=T.PAD_MD, pady=(0, T.PAD_SM))
+
+        path = self.settings.background_image_path or ""
+        label_text = os.path.basename(path) if path else t("Default gradient (no image set)")
+
+        self._bg_path_lbl = ctk.CTkLabel(
+            card, text=label_text,
+            anchor="w",
+            text_color=T.TEXT_MUTED,
+            font=ctk.CTkFont(size=T.FS_SMALL),
+        )
+        self._bg_path_lbl.pack(fill="x", padx=T.PAD_MD, pady=(0, T.PAD_XS))
+
+        btn_row = ctk.CTkFrame(card, fg_color="transparent")
+        btn_row.pack(fill="x", padx=T.PAD_MD, pady=(0, T.PAD_MD))
+
+        W.SecondaryButton(btn_row, t("Browse…"), self._on_browse_bg, width=110
+                          ).pack(side="left", padx=(0, T.PAD_SM))
+        W.DangerButton(btn_row, t("Clear"), self._on_clear_bg, width=80
+                       ).pack(side="left")
+
+    def _on_browse_bg(self):
+        import tkinter.filedialog as fd
+        path = fd.askopenfilename(
+            title=t("Choose a background image"),
+            filetypes=[
+                ("Images", "*.png *.jpg *.jpeg *.webp *.bmp *.gif *.tiff"),
+                ("All files", "*.*"),
+            ],
+        )
+        if not path:
+            return
+        self.settings.background_image_path = path
+        preferences.save(self.settings)
+        if self._bg_path_lbl:
+            self._bg_path_lbl.configure(text=os.path.basename(path))
+        gui = self.app
+        if hasattr(gui, "reload_background"):
+            gui.reload_background()
+        log.info("background_image_path = %r", path)
+
+    def _on_clear_bg(self):
+        self.settings.background_image_path = ""
+        preferences.save(self.settings)
+        if self._bg_path_lbl:
+            self._bg_path_lbl.configure(text=t("Default gradient (no image set)"))
+        gui = self.app
+        if hasattr(gui, "reload_background"):
+            gui.reload_background()
+        log.info("background_image_path cleared")
 
     def _build_updates_card(self):
         card = W.Card(self._scroll)

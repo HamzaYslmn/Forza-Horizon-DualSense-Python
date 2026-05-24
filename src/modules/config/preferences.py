@@ -30,6 +30,7 @@ DEFAULT_PROFILE_NAME = "Default"
 # System fields — shared across profiles and preserved across launches.
 # Everything else lives in the active profile and is wiped from Default each launch.
 GLOBAL_FIELDS = frozenset({
+    "udp_host",
     "udp_port",
     "enable_reconnect",
     "reconnect_interval_s",
@@ -40,6 +41,8 @@ GLOBAL_FIELDS = frozenset({
     "check_for_updates",
     "language",
     "controller_lock_serial",
+    "background_image_path",
+    "moonlight_mode",
 })
 
 _SIMPLE = (bool, int, float, str)

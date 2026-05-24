@@ -191,6 +191,7 @@ class DualSense:
         reconnect_interval_s: float = 5.0,
         enable_reconnect: bool = False,
         controller_lock_serial: str = "",
+        disable_input_watchdog: bool = False,
     ):
         self.dev = None
         self.dev_path = None
@@ -221,10 +222,12 @@ class DualSense:
         # HidHide is cloaking the device AND the user opted out of reconnect.
         # Locked controller serial (empty = first-found). Persists across launches.
         self._lock_serial = controller_lock_serial
+        self._disable_input_watchdog = disable_input_watchdog
+        self._transient_connected = False   # set by _io_mac_transient
 
     @property
     def connected(self) -> bool:
-        return self.dev is not None
+        return self.dev is not None or self._transient_connected
 
     @property
     def persistent(self) -> bool:
@@ -234,9 +237,15 @@ class DualSense:
     def open(self):
         """Start the I/O thread. Never raises if the controller is absent."""
         log.info("HidHide: %s", "detected" if hidhide.is_detected() else "not detected")
-        self._log_reconnect_mode()
+        target = self._io_mac_transient if (
+            self._disable_input_watchdog and sys.platform == "darwin"
+        ) else self._io
+        if target is self._io_mac_transient:
+            log.info("macOS Moonlight mode: transient HID opens (write-only, no device held open).")
+        else:
+            self._log_reconnect_mode()
         self._running = True
-        self._thread = threading.Thread(target=self._io, daemon=True)
+        self._thread = threading.Thread(target=target, daemon=True)
         self._thread.start()
 
     def _log_reconnect_mode(self) -> None:
@@ -395,6 +404,97 @@ class DualSense:
                             "(enable it in the Settings tab to recover automatically).",
                             suffix)
 
+    # MARK: macOS Moonlight transient-open I/O
+    def _io_mac_transient(self):
+        """macOS Moonlight mode: open device briefly per-write, then close immediately.
+        This leaves the device free for Moonlight/GameController 99% of the time,
+        avoiding the IOKit input-callback conflict that disables gamepad input in Moonlight."""
+        _last_enum: list = []
+        _enum_t = 0.0
+        _warned_missing = False
+        _pulse_done = False
+
+        while self._running:
+            self._wake.wait(0.5)
+            self._wake.clear()
+            if not self._running:
+                break
+
+            with self._lock:
+                dirty = self._dirty or not _pulse_done
+                if not dirty:
+                    continue
+                self._dirty = False
+                left, right = self._left, self._right
+
+            # Re-enumerate at most every 5 s to avoid hammering IOKit
+            now = time.monotonic()
+            if now - _enum_t >= 5.0:
+                try:
+                    _last_enum = _enumerate_dualsenses()
+                except Exception:
+                    _last_enum = []
+                _enum_t = now
+
+            if not _last_enum:
+                if not _warned_missing:
+                    log.info("Moonlight mode: waiting for DualSense…")
+                    _warned_missing = True
+                self._transient_connected = False
+                continue
+            _warned_missing = False
+
+            info = None
+            if self._lock_serial:
+                info = next((d for d in _last_enum
+                             if d.get("serial_number") == self._lock_serial), None)
+            if info is None:
+                info = _last_enum[0]
+
+            lay = BT if _is_bluetooth(info) else USB
+
+            def _make_buf(l_trig, r_trig):
+                b = bytearray(lay["size"])
+                b[0] = lay["rid"]
+                if lay["bt"]:
+                    b[1] = 0x02
+                b[lay["flags"]] = TRIG_FLAGS
+                for pos, (mode, params) in ((lay["r"], r_trig), (lay["l"], l_trig)):
+                    b[pos] = mode
+                    b[pos + 1:pos + 1 + len(params)] = params[:10]
+                if lay["bt"]:
+                    crc = zlib.crc32(memoryview(b)[:74], _BT_CRC_SEED)
+                    struct.pack_into("<I", b, 74, crc)
+                return b
+
+            dev = hid.device()
+            try:
+                dev.open_path(info["path"])
+                # Startup pulse on first successful connect
+                if not _pulse_done and self._enable_startup_pulse:
+                    pulse = (M_RIGID, (0, self._pulse_force))
+                    dev.write(_make_buf(pulse, pulse))
+                    time.sleep(0.2)
+                    dev.write(_make_buf(off(), off()))
+                    _pulse_done = True
+                    log.info("DualSense connected via Moonlight transient mode (%s)",
+                             "BT" if lay["bt"] else "USB")
+                else:
+                    _pulse_done = True
+                    dev.write(_make_buf(left, right))
+                self._transient_connected = True
+            except (OSError, IOError) as e:
+                log.debug("Moonlight transient write failed: %s", e)
+                self._transient_connected = False
+                _enum_t = 0.0   # force re-enumerate next cycle
+            finally:
+                try:
+                    dev.close()
+                except Exception:
+                    pass
+
+        self._transient_connected = False
+
     # MARK: I/O thread — reconnect when missing, write when dirty, watchdog on idle input
     def _io(self):
         while self._running:
@@ -419,21 +519,24 @@ class DualSense:
             persistent = self.persistent
 
             # --- Connected: drain one input report for the liveness watchdog.
+            # Moonlight mode: skip reads entirely so we don't compete with
+            # Moonlight/SDL2/GameController framework for HID input reports.
             # timeout_ms=0 forces a truly nonblocking read — set_nonblocking()
             # is unreliable on Windows Bluetooth, where read() would otherwise
             # block until the BT stack times out (~30 s after a drop).
-            try:
-                data = self.dev.read(self.lay["size"], timeout_ms=0)
-            except OSError as e:
-                if not persistent:
-                    self._disconnect(f"read failed: {e}")
+            if not self._disable_input_watchdog:
+                try:
+                    data = self.dev.read(self.lay["size"], timeout_ms=0)
+                except OSError as e:
+                    if not persistent:
+                        self._disconnect(f"read failed: {e}")
+                        continue
+                    data = None
+                if data:
+                    self._last_input_at = now
+                elif not persistent and now - self._last_input_at >= self._input_idle_timeout:
+                    self._disconnect(f"no input for {self._input_idle_timeout:.0f}s")
                     continue
-                data = None
-            if data:
-                self._last_input_at = now
-            elif not persistent and now - self._last_input_at >= self._input_idle_timeout:
-                self._disconnect(f"no input for {self._input_idle_timeout:.0f}s")
-                continue
 
             # --- Write the latest queued frame, if any ---
             with self._lock:

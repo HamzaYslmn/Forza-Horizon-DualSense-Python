@@ -108,6 +108,15 @@ class Settings:
     # Module name in `lang/` (en, tr, zh, ja). Unknown codes fall back to English.
     language: str = "en"
 
+    # MARK: System - background image
+    # Absolute path to a custom background image. Empty = built-in gradient.
+    background_image_path: str = ""
+
+    # MARK: System - Moonlight / streaming mode
+    # Skips reading input reports from the controller so FH DualSense only
+    # writes trigger effects. Prevents HID conflicts with Moonlight/SDL2 on macOS.
+    moonlight_mode: bool = False
+
     # MARK: System - auto exit
     # Closes when the game process disappears; telemetry-lost is a fallback for Task Manager kills.
     exit_on_game_close: bool = True

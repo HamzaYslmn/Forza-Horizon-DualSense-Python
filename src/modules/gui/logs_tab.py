@@ -17,9 +17,9 @@ MAX_LINES = 2000
 
 # fg_color, hover_color, text_color per level
 LEVEL_STYLES = {
-    "DEBUG":   (T.BG_HOVER, T.BG_ACTIVE, T.TEXT_FAINT),
-    "INFO":    (T.ACCENT,   T.ACCENT_HOVER, "white"),
-    "WARNING": (T.YELLOW,   ("#92400e", "#d49627"), "white"),
+    "DEBUG":   (T.BG_HOVER,  T.BG_ACTIVE,    T.TEXT_FAINT),
+    "INFO":    (T.ACCENT,    T.ACCENT_HOVER,  "white"),
+    "WARNING": (T.YELLOW,    "#b45309",       "white"),
 }
 
 
@@ -70,11 +70,11 @@ class LogsTab(ctk.CTkFrame):
             state="disabled",
         )
         self.text.pack(side="left", fill="both", expand=True, padx=(4, 0), pady=4)
-        self.text.tag_configure("DEBUG", foreground=T.TEXT_FAINT[1])
+        self.text.tag_configure("DEBUG", foreground=T.TEXT_FAINT)
         self.text.tag_configure("INFO", foreground="#d4d4d4")
-        self.text.tag_configure("WARNING", foreground=T.YELLOW[1])
-        self.text.tag_configure("ERROR", foreground=T.RED[1])
-        self.text.tag_configure("CRITICAL", foreground="#ffffff", background=T.RED[1])
+        self.text.tag_configure("WARNING", foreground=T.YELLOW)
+        self.text.tag_configure("ERROR", foreground=T.RED)
+        self.text.tag_configure("CRITICAL", foreground="#ffffff", background=T.RED)
         scroll = tk.Scrollbar(holder, command=self.text.yview,
                               bg="#2b2d31", troughcolor="#1e1f22",
                               activebackground=T.ACCENT, borderwidth=0,
