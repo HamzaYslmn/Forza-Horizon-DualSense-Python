@@ -4,42 +4,45 @@ All colors, spacing, and type scale live here. Never hardcode elsewhere.
 """
 
 # ── Background tiers ──────────────────────────────────────────────────────────
-# These sit *over* the blurred background image.
-BG_ROOT   = "#08090f"          # window fill (fallback when no image)
-BG_DEEP   = "#0c0d16"          # sidebar panel
-BG_MAIN   = "#0f1019"          # content area
-BG_PANEL  = "#13151f"          # glass cards
-BG_INPUT  = "#0c0d16"          # entries / list boxes / log
-BG_HOVER  = "#1c1e2d"          # hover state
-BG_ACTIVE = "#252840"          # selected nav item
+BG_ROOT   = "#07080e"          # window fill (behind everything)
+BG_DEEP   = "#0a0b14"          # sidebar / header panels
+BG_MAIN   = "#0d0e18"          # content area base
+BG_PANEL  = "#12141f"          # glass cards
+BG_INPUT  = "#0a0c18"          # entries / list boxes / log
+BG_HOVER  = "#1e2035"          # hover state
+BG_ACTIVE = "#252a45"          # selected nav item
 
-# ── Glass card surface ─────────────────────────────────────────────────────────
-GLASS_BORDER        = "#2d2f4a"   # subtle card border
-GLASS_BORDER_LIGHT  = "#3d3f60"   # hover / highlight border
-GLASS_RADIUS        = 14          # corner radius for all cards
+# ── Glass surface tokens ───────────────────────────────────────────────────────
+GLASS_BORDER        = "#3b3e62"   # card border (visible glow line)
+GLASS_BORDER_LIGHT  = "#5558a0"   # hover / highlight border
+GLASS_RADIUS        = 16          # corner radius for cards
+GLASS_HEADER        = "#0e1020"   # header / sidebar tinted glass colour
 
 # ── Borders & dividers ────────────────────────────────────────────────────────
-BORDER        = "#1a1c2a"
-BORDER_SUBTLE = "#12131e"
+BORDER        = "#181a2c"
+BORDER_SUBTLE = "#101220"
 
 # ── Text ──────────────────────────────────────────────────────────────────────
-TEXT       = "#e8eaf6"
-TEXT_MUTED = "#8b8fa8"
-TEXT_FAINT = "#555870"
+TEXT       = "#eceef8"
+TEXT_MUTED = "#7e82a0"
+TEXT_FAINT = "#4a4d68"
 
 # ── Accent (electric indigo) ──────────────────────────────────────────────────
 ACCENT       = "#6366f1"
 ACCENT_HOVER = "#4f52d4"
-ACCENT_SOFT  = "#6366f1"
+ACCENT_SOFT  = "#818cf8"
+ACCENT_GLOW  = "#6366f133"   # used for box-shadow approximation (border trick)
 
 # ── Semantic ──────────────────────────────────────────────────────────────────
 GREEN        = "#22c55e"
 GREEN_HOVER  = "#16a34a"
 GREEN_DIM    = "#14532d"
+GREEN_GLOW   = "#22c55e55"
 YELLOW       = "#eab308"
 RED          = "#ef4444"
 RED_HOVER    = "#dc2626"
-RED_DIM      = "#450a0a"
+RED_DIM      = "#3d0c0c"
+RED_GLOW     = "#ef444455"
 PINK         = "#ec4899"
 
 # ── Spacing ───────────────────────────────────────────────────────────────────
@@ -50,11 +53,11 @@ PAD_LG = 24
 PAD_XL = 32
 
 # ── Sizes ─────────────────────────────────────────────────────────────────────
-SIDEBAR_W = 200
-HEADER_H  = 52
+SIDEBAR_W = 210
+HEADER_H  = 56
 
 # ── Font sizes ────────────────────────────────────────────────────────────────
-FS_H1    = 20
+FS_H1    = 18
 FS_H2    = 13
 FS_BODY  = 12
 FS_SMALL = 11

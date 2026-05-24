@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FH DualSense</title>
+<style>
+/* ── Reset & base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-uri: url('__BG_URI__');
+  --glass:      rgba(8, 9, 22, 0.62);
+  --glass-deep: rgba(6, 7, 16, 0.78);
+  --glass-card: rgba(14, 16, 32, 0.70);
+  --border:     rgba(99, 102, 241, 0.18);
+  --border-hi:  rgba(99, 102, 241, 0.40);
+  --blur: blur(22px) saturate(160%);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --accent:   #6366f1;
+  --accent-h: #4f52d4;
+  --green:    #22c55e;
+  --green-h:  #16a34a;
+  --green-dim:#0d2e1a;
+  --red:      #ef4444;
+  --red-h:    #dc2626;
+  --red-dim:  #2d0c0c;
+  --yellow:   #eab308;
+  --pink:     #ec4899;
+  --text:     #eceef8;
+  --muted:    #7e82a0;
+  --faint:    #4a4d68;
+  --sidebar-w: 220px;
+  --header-h:  54px;
+  font-family: -apple-system, "SF Pro Display", BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background-image: var(--bg-uri);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Glass mixin ────────────────────────────────────────────────────────────── */
+.glass {
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+}
+.glass-deep {
+  background: var(--glass-deep);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-right: 1px solid var(--border);
+}
+.glass-card {
+  background: var(--glass-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  padding: 18px 20px 14px;
+}
+.glass-card:last-child { margin-bottom: 0; }
+
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+#header {
+  height: var(--header-h);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--border);
+}
+#body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+#sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 10px;
+  gap: 10px;
+  overflow-y: auto;
+}
+#content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.h-logo { display: flex; align-items: center; gap: 8px; flex: 1; }
+.h-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+         box-shadow: 0 0 8px var(--accent); }
+.h-title { font-size: 14px; font-weight: 700; letter-spacing: -.3px; }
+.h-subtitle { font-size: 11px; color: var(--muted); margin-left: 4px; }
+.h-center { display: flex; align-items: center; justify-content: center; flex: 1; }
+.h-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex: 1; }
+.version-tag { font-size: 11px; color: var(--faint); cursor: pointer; }
+.version-tag:hover { color: var(--muted); }
+
+/* Status pill */
+.status-pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(14,16,32,0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  font-size: 11px; font-weight: 600;
+}
+.status-pill .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  transition: background .3s, box-shadow .3s;
+}
+.status-pill .label { color: var(--text); }
+.status-pill .prefix { color: var(--faint); font-weight: 500; margin-right: 2px; }
+
+/* ── Sidebar ────────────────────────────────────────────────────────────────── */
+.nav-card {
+  background: var(--glass-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.nav-btn {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none; background: transparent;
+  color: var(--muted); font-size: 12px; font-weight: 500;
+  cursor: pointer; width: 100%; text-align: left;
+  transition: background .15s, color .15s;
+}
+.nav-btn:hover { background: rgba(99,102,241,.08); color: var(--text); }
+.nav-btn.active { background: rgba(99,102,241,.15); color: var(--text); font-weight: 600; }
+.nav-btn .icon { font-size: 14px; width: 18px; text-align: center; }
+
+/* Session card */
+.session-card {
+  background: var(--glass-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.btn { display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 14px; border-radius: 10px; border: none;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: background .15s, opacity .15s, transform .08s;
+  width: 100%;
+}
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .4; cursor: default; transform: none; }
+.btn-start { background: var(--green); color: #fff; }
+.btn-start:hover:not(:disabled) { background: var(--green-h); }
+.btn-start:disabled { background: var(--green-dim); }
+.btn-stop  { background: var(--red); color: #fff; }
+.btn-stop:hover:not(:disabled)  { background: var(--red-h); }
+.btn-stop:disabled  { background: var(--red-dim); }
+
+/* Sidebar footer */
+.sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 7px; }
+.btn-ghost {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 7px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-size: 11px; cursor: pointer; width: 100%;
+  transition: background .15s, color .15s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,.05); color: var(--text); }
+.btn-sponsor {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 12px; border-radius: 10px; border: none;
+  background: #ec4899; color: #fff; font-size: 12px; font-weight: 700;
+  cursor: pointer; width: 100%;
+  transition: background .15s;
+}
+.btn-sponsor:hover { background: #d43882; }
+.credit-box {
+  background: var(--glass-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px; text-align: center;
+}
+.credit-box .by { font-size: 10px; color: var(--faint); }
+.credit-link { font-size: 11px; color: var(--accent); font-weight: 600;
+               cursor: pointer; text-decoration: none; }
+.credit-link:hover { color: #818cf8; }
+
+/* ── Tabs ────────────────────────────────────────────────────────────────────── */
+.tab { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.tab.active { display: flex; }
+
+.tab-header { padding: 22px 28px 16px; flex-shrink: 0; }
+.tab-header h1 { font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
+.tab-header p  { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+.tab-scroll {
+  flex: 1; overflow-y: auto; padding: 0 28px 28px;
+  scrollbar-width: thin; scrollbar-color: rgba(99,102,241,.3) transparent;
+}
+.tab-scroll::-webkit-scrollbar { width: 5px; }
+.tab-scroll::-webkit-scrollbar-track { background: transparent; }
+.tab-scroll::-webkit-scrollbar-thumb { background: rgba(99,102,241,.3); border-radius: 99px; }
+
+/* ── Glass card sections ─────────────────────────────────────────────────────── */
+.section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .6px;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Field rows ──────────────────────────────────────────────────────────────── */
+.field-row {
+  display: flex; align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(99,102,241,.06);
+}
+.field-row:last-child { border-bottom: none; padding-bottom: 0; }
+.field-row:first-child { padding-top: 0; }
+
+.field-meta { flex: 1; min-width: 0; padding-right: 16px; }
+.field-label { font-size: 12px; color: var(--text); font-weight: 500; }
+.field-hint  { font-size: 10px; color: var(--faint); margin-top: 2px; line-height: 1.4; }
+
+.field-ctrl { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+/* Slider */
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 140px; height: 4px;
+  background: rgba(99,102,241,.2); border-radius: 99px; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
+  box-shadow: 0 0 6px rgba(99,102,241,.5);
+  transition: transform .1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* Number input */
+.num-input {
+  width: 64px; padding: 5px 8px;
+  background: rgba(14,16,32,.8); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text); font-size: 12px; text-align: center;
+  outline: none; transition: border-color .15s;
+}
+.num-input:focus { border-color: var(--accent); }
+
+/* Text input */
+.text-input {
+  width: 180px; padding: 6px 10px;
+  background: rgba(14,16,32,.8); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text); font-size: 12px;
+  outline: none; transition: border-color .15s;
+}
+.text-input:focus { border-color: var(--accent); }
+
+/* Toggle */
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; cursor: pointer; }
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0; border-radius: 99px;
+  background: rgba(99,102,241,.15); border: 1px solid var(--border);
+  transition: background .2s;
+}
+.toggle input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(255,255,255,.6);
+  transition: left .2s, background .2s;
+  pointer-events: none;
+}
+.toggle input:checked ~ .toggle-thumb { left: 19px; background: #fff; }
+
+/* ── Controls tab ────────────────────────────────────────────────────────────── */
+.controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stat-card {
+  padding: 20px 22px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.stat-label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.stat-value { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+.stat-value.green  { color: var(--green); }
+.stat-value.yellow { color: var(--yellow); }
+.stat-value.red    { color: var(--red); }
+.stat-value.faint  { color: var(--faint); }
+
+.trigger-bar-wrap { display: flex; flex-direction: column; gap: 6px; }
+.trigger-label { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
+.trigger-bar-bg {
+  height: 8px; border-radius: 99px;
+  background: rgba(99,102,241,.12); overflow: hidden;
+}
+.trigger-bar-fill {
+  height: 100%; border-radius: 99px; width: 0%;
+  transition: width .1s ease-out;
+}
+.trigger-bar-fill.left  { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.trigger-bar-fill.right { background: linear-gradient(90deg, #22c55e, #4ade80); }
+
+/* ── Logs tab ────────────────────────────────────────────────────────────────── */
+#log-container {
+  flex: 1; overflow-y: auto; padding: 10px 18px;
+  font-family: "SF Mono", "JetBrains Mono", "Fira Code", monospace;
+  font-size: 11px; line-height: 1.7;
+  background: rgba(6,7,16,.75); backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  scrollbar-width: thin; scrollbar-color: rgba(99,102,241,.3) transparent;
+}
+#log-container::-webkit-scrollbar { width: 5px; }
+#log-container::-webkit-scrollbar-thumb { background: rgba(99,102,241,.3); border-radius: 99px; }
+.log-line { display: flex; gap: 8px; padding: 1px 0; }
+.log-time  { color: var(--faint); flex-shrink: 0; }
+.log-level { flex-shrink: 0; font-weight: 700; width: 7ch; }
+.log-msg   { color: var(--text); word-break: break-word; }
+.log-DEBUG    .log-level { color: var(--faint); }
+.log-INFO     .log-level { color: var(--accent); }
+.log-WARNING  .log-level { color: var(--yellow); }
+.log-ERROR    .log-level { color: var(--red); }
+.log-CRITICAL .log-level { color: var(--red); }
+.log-WARNING  .log-msg, .log-ERROR .log-msg, .log-CRITICAL .log-msg { color: #f0d0d0; }
+
+.log-toolbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 18px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.btn-sm {
+  padding: 5px 12px; border-radius: 7px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); font-size: 11px;
+  cursor: pointer; transition: background .15s, color .15s;
+}
+.btn-sm:hover { background: rgba(255,255,255,.05); color: var(--text); }
+
+/* ── Profiles tab ────────────────────────────────────────────────────────────── */
+.profile-list { display: flex; flex-direction: column; gap: 6px; }
+.profile-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px;
+  background: rgba(14,16,32,.5); border: 1px solid var(--border);
+  transition: background .15s;
+}
+.profile-item:hover { background: rgba(99,102,241,.08); }
+.profile-name { flex: 1; font-size: 13px; font-weight: 600; }
+.profile-active-tag {
+  font-size: 10px; font-weight: 700; padding: 2px 8px;
+  background: rgba(99,102,241,.2); color: var(--accent);
+  border-radius: 99px; letter-spacing: .3px;
+}
+.profile-actions { display: flex; gap: 6px; }
+.btn-icon {
+  padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); font-size: 11px;
+  cursor: pointer; transition: background .15s, color .15s;
+}
+.btn-icon:hover { background: rgba(255,255,255,.06); color: var(--text); }
+
+.new-profile-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.new-profile-row .text-input { flex: 1; }
+
+/* ── System tab extras ───────────────────────────────────────────────────────── */
+.controller-list { display: flex; flex-direction: column; gap: 6px; }
+.controller-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px;
+  background: rgba(14,16,32,.5); border: 1px solid var(--border);
+}
+.controller-item label { display: flex; align-items: center; gap: 9px; flex: 1; cursor: pointer; }
+.controller-item input[type=radio] { accent-color: var(--accent); }
+.controller-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 8px;
+  border-radius: 99px; letter-spacing: .3px;
+}
+.badge-bt  { background: rgba(99,102,241,.2); color: var(--accent); }
+.badge-usb { background: rgba(34,197,94,.15); color: var(--green); }
+
+.bg-preview {
+  width: 100%; height: 80px; border-radius: 10px; overflow: hidden;
+  background: rgba(14,16,32,.5); border: 1px solid var(--border);
+  margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.bg-preview img { width: 100%; height: 100%; object-fit: cover; }
+.bg-actions { display: flex; gap: 8px; }
+
+/* ── Inline action buttons ───────────────────────────────────────────────────── */
+.btn-primary {
+  padding: 8px 16px; border-radius: 9px; border: none;
+  background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: background .15s;
+}
+.btn-primary:hover { background: var(--accent-h); }
+.btn-danger {
+  padding: 8px 16px; border-radius: 9px; border: none;
+  background: var(--red); color: #fff;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: background .15s;
+}
+.btn-danger:hover { background: var(--red-h); }
+
+/* ── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+.tab.active { animation: fadeIn .2s ease; }
+
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
+<header id="header" class="glass">
+  <div class="h-logo">
+    <div class="h-dot"></div>
+    <span class="h-title">FH DualSense</span>
+    <span class="h-subtitle">adaptive triggers</span>
+  </div>
+  <div class="h-center">
+    <div class="status-pill" id="status-pill">
+      <div class="dot" id="status-dot" style="background:var(--red)"></div>
+      <span class="prefix">DUALSENSE</span>
+      <span class="label" id="status-label">stopped</span>
+    </div>
+  </div>
+  <div class="h-right">
+    <span class="version-tag" id="version-tag" onclick="api('open_url','__CHANGELOG__')">v__VERSION__</span>
+  </div>
+</header>
+
+<!-- ══ BODY ════════════════════════════════════════════════════════════════ -->
+<div id="body">
+
+<!-- ── SIDEBAR ─────────────────────────────────────────────────────────── -->
+<aside id="sidebar" class="glass-deep">
+
+  <!-- Nav -->
+  <div class="nav-card">
+    <button class="nav-btn active" data-tab="controls"  onclick="switchTab('controls')"><span class="icon">🎮</span> Controls</button>
+    <button class="nav-btn"        data-tab="settings"  onclick="switchTab('settings')"><span class="icon">⚙️</span> Settings</button>
+    <button class="nav-btn"        data-tab="system"    onclick="switchTab('system')"  ><span class="icon">🖥</span> System</button>
+    <button class="nav-btn"        data-tab="profiles"  onclick="switchTab('profiles')"><span class="icon">📋</span> Profiles</button>
+    <button class="nav-btn"        data-tab="logs"      onclick="switchTab('logs')"    ><span class="icon">📜</span> Logs</button>
+  </div>
+
+  <!-- Session -->
+  <div class="session-card">
+    <button class="btn btn-start" id="btn-start" onclick="onStart()">▶  Start</button>
+    <button class="btn btn-stop"  id="btn-stop"  onclick="onStop()" disabled>■  Stop</button>
+  </div>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <button class="btn-ghost" onclick="api('open_url','__CHANGELOG__')">Changelog</button>
+    <button class="btn-sponsor" onclick="api('open_url','__SPONSOR__')">♥  Sponsor</button>
+    <div class="credit-box">
+      <div class="by">Originally created by</div>
+      <a class="credit-link" onclick="api('open_url','__SOURCE__')">Hamza Yeşilmen</a>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ── CONTENT ──────────────────────────────────────────────────────────── -->
+<main id="content">
+
+  <!-- CONTROLS TAB -->
+  <div class="tab active" id="tab-controls">
+    <div class="tab-header">
+      <h1>Controls</h1>
+      <p>Real-time session status and trigger feedback</p>
+    </div>
+    <div class="tab-scroll">
+      <div class="controls-grid">
+        <div class="glass-card stat-card">
+          <div class="stat-label">Controller</div>
+          <div class="stat-value faint" id="ctrl-status">–</div>
+          <div style="font-size:11px;color:var(--faint)" id="ctrl-serial"></div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Session</div>
+          <div class="stat-value faint" id="sess-status">Stopped</div>
+        </div>
+      </div>
+      <div class="glass-card" style="margin-top:14px">
+        <div class="section-title">Trigger forces</div>
+        <div class="trigger-bar-wrap" style="margin-bottom:14px">
+          <div class="trigger-label"><span>Left  (Brake)</span><span id="trig-l-val">–</span></div>
+          <div class="trigger-bar-bg"><div class="trigger-bar-fill left" id="trig-l-bar"></div></div>
+        </div>
+        <div class="trigger-bar-wrap">
+          <div class="trigger-label"><span>Right (Gas)</span><span id="trig-r-val">–</span></div>
+          <div class="trigger-bar-bg"><div class="trigger-bar-fill right" id="trig-r-bar"></div></div>
+        </div>
+      </div>
+      <div class="glass-card" style="margin-top:14px">
+        <div class="section-title">Quick info</div>
+        <div class="field-row">
+          <div class="field-meta"><div class="field-label">UDP host</div></div>
+          <div class="field-ctrl" id="info-host" style="color:var(--muted);font-size:12px">–</div>
+        </div>
+        <div class="field-row">
+          <div class="field-meta"><div class="field-label">UDP port</div></div>
+          <div class="field-ctrl" id="info-port" style="color:var(--muted);font-size:12px">–</div>
+        </div>
+        <div class="field-row">
+          <div class="field-meta"><div class="field-label">Moonlight mode</div></div>
+          <div class="field-ctrl" id="info-moon" style="color:var(--muted);font-size:12px">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="tab" id="tab-settings">
+    <div class="tab-header">
+      <h1>Settings</h1>
+      <p>All changes save instantly</p>
+    </div>
+    <div class="tab-scroll" id="settings-scroll"></div>
+  </div>
+
+  <!-- SYSTEM TAB -->
+  <div class="tab" id="tab-system">
+    <div class="tab-header">
+      <h1>System</h1>
+      <p>Controller, background, and app-level options</p>
+    </div>
+    <div class="tab-scroll">
+
+      <!-- Controller -->
+      <div class="glass-card">
+        <div class="section-title">Controller</div>
+        <div class="controller-list" id="controller-list">
+          <div style="color:var(--faint);font-size:12px">Scanning…</div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn-sm" onclick="rescanControllers()">↻ Rescan</button>
+        </div>
+      </div>
+
+      <!-- Background image -->
+      <div class="glass-card">
+        <div class="section-title">Background Image</div>
+        <div class="bg-preview" id="bg-preview">
+          <img id="bg-thumb" src="" alt="" style="display:none">
+          <span style="color:var(--faint);font-size:11px" id="bg-thumb-label">Default background</span>
+        </div>
+        <div class="bg-actions">
+          <button class="btn-primary" onclick="browseBackground()">Browse…</button>
+          <button class="btn-danger"  onclick="clearBackground()">Clear</button>
+        </div>
+      </div>
+
+      <!-- System settings -->
+      <div id="system-scroll"></div>
+
+    </div>
+  </div>
+
+  <!-- PROFILES TAB -->
+  <div class="tab" id="tab-profiles">
+    <div class="tab-header">
+      <h1>Profiles</h1>
+      <p>Save and restore setting presets</p>
+    </div>
+    <div class="tab-scroll">
+      <div class="glass-card">
+        <div class="section-title">New profile</div>
+        <div class="new-profile-row">
+          <input class="text-input" id="new-profile-name" placeholder="Profile name…">
+          <button class="btn-primary" onclick="saveProfile()">Save current</button>
+        </div>
+      </div>
+      <div class="glass-card">
+        <div class="section-title">Saved profiles</div>
+        <div class="profile-list" id="profile-list">
+          <div style="color:var(--faint);font-size:12px">No profiles saved.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGS TAB -->
+  <div class="tab" id="tab-logs">
+    <div class="log-toolbar">
+      <span style="font-size:12px;color:var(--muted);flex:1">Console output</span>
+      <button class="btn-sm" onclick="clearLogs()">Clear</button>
+      <button class="btn-sm" id="log-autoscroll-btn" onclick="toggleAutoscroll()" style="color:var(--accent)">Auto-scroll ON</button>
+    </div>
+    <div id="log-container"></div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── URLs injected by Python ─────────────────────────────────────────────────
+const URLS = {
+  changelog: '__CHANGELOG__',
+  sponsor:   '__SPONSOR__',
+  source:    '__SOURCE__',
+};
+
+// ── Schema from Python ──────────────────────────────────────────────────────
+const SETTINGS_SCHEMA = "__SETTINGS_SCHEMA__";
+const SYSTEM_SCHEMA   = "__SYSTEM_SCHEMA__";
+
+// ── State ────────────────────────────────────────────────────────────────────
+let _settings      = {};
+let _running       = false;
+let _logAutoscroll = true;
+let _activeTab     = 'controls';
+let _controllers   = [];
+let _controllerLock = '';
+
+// ── Wait for pywebview API ───────────────────────────────────────────────────
+function waitForApi(cb) {
+  if (window.pywebview && window.pywebview.api) { cb(); return; }
+  setTimeout(() => waitForApi(cb), 50);
+}
+
+async function api(method, ...args) {
+  return await window.pywebview.api[method](...args);
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+waitForApi(async () => {
+  const [settings] = await Promise.all([api('get_settings')]);
+  _settings = settings;
+  _controllerLock = settings.controller_lock_serial || '';
+  renderSettings('settings-scroll', SETTINGS_SCHEMA, settings);
+  renderSettings('system-scroll',   SYSTEM_SCHEMA,   settings);
+  updateQuickInfo(settings);
+  await Promise.all([loadProfiles(), rescanControllers(), loadBgPreview(settings)]);
+  // load initial logs
+  const logs = await api('get_logs', 200);
+  for (const l of logs) appendLog(l);
+});
+
+// ── Push callbacks (called by Python) ────────────────────────────────────────
+window.__fhds = {
+  onStatus(s) {
+    _running = s.running;
+    updateStatus(s);
+    updateSessionButtons();
+  },
+  appendLogs(lines) {
+    for (const l of lines) appendLog(l);
+  },
+};
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+  _activeTab = name;
+}
+
+// ── Status ────────────────────────────────────────────────────────────────────
+function updateStatus(s) {
+  const dot   = document.getElementById('status-dot');
+  const label = document.getElementById('status-label');
+  const colors = { connected: 'var(--green)', waiting: 'var(--yellow)', stopped: 'var(--red)' };
+  const shadow = { connected: '0 0 8px var(--green)', waiting: '0 0 8px var(--yellow)', stopped: 'none' };
+  dot.style.background  = colors[s.state] || 'var(--red)';
+  dot.style.boxShadow   = shadow[s.state] || 'none';
+  label.textContent     = s.label;
+
+  const cv = document.getElementById('ctrl-status');
+  const cs = document.getElementById('ctrl-serial');
+  if (s.state === 'connected') {
+    cv.textContent = 'Connected'; cv.className = 'stat-value green';
+  } else if (s.state === 'waiting') {
+    cv.textContent = 'Waiting…'; cv.className = 'stat-value yellow';
+  } else {
+    cv.textContent = '–'; cv.className = 'stat-value faint';
+  }
+  cs.textContent = s.serial || '';
+
+  const sv = document.getElementById('sess-status');
+  if (s.running) { sv.textContent = 'Running'; sv.className = 'stat-value green'; }
+  else           { sv.textContent = 'Stopped'; sv.className = 'stat-value faint'; }
+}
+
+function updateQuickInfo(s) {
+  document.getElementById('info-host').textContent = s.udp_host || '–';
+  document.getElementById('info-port').textContent = s.udp_port || '–';
+  document.getElementById('info-moon').textContent = s.moonlight_mode ? 'Enabled' : 'Off';
+}
+
+// ── Session buttons ───────────────────────────────────────────────────────────
+function updateSessionButtons() {
+  const btnStart = document.getElementById('btn-start');
+  const btnStop  = document.getElementById('btn-stop');
+  btnStart.disabled = _running;
+  btnStop.disabled  = !_running;
+}
+
+async function onStart() {
+  const r = await api('start_session');
+  if (!r.ok) console.error(r.error);
+}
+async function onStop() {
+  await api('stop_session');
+}
+
+// ── Settings renderer ─────────────────────────────────────────────────────────
+function renderSettings(containerId, schema, values) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  for (const section of schema) {
+    const card = document.createElement('div');
+    card.className = 'glass-card';
+    const title = document.createElement('div');
+    title.className = 'section-title';
+    title.textContent = section.section;
+    card.appendChild(title);
+    for (const field of section.fields) {
+      const row = makeFieldRow(field, values[field.key]);
+      if (row) card.appendChild(row);
+    }
+    container.appendChild(card);
+  }
+}
+
+function makeFieldRow(field, value) {
+  const row = document.createElement('div');
+  row.className = 'field-row';
+
+  const meta = document.createElement('div');
+  meta.className = 'field-meta';
+  meta.innerHTML = `<div class="field-label">${field.label}</div>` +
+    (field.hint ? `<div class="field-hint">${field.hint}</div>` : '');
+  row.appendChild(meta);
+
+  const ctrl = document.createElement('div');
+  ctrl.className = 'field-ctrl';
+
+  if (field.type === 'bool') {
+    ctrl.innerHTML = `
+      <label class="toggle">
+        <input type="checkbox" id="f-${field.key}" ${value ? 'checked' : ''}>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>`;
+    ctrl.querySelector('input').addEventListener('change', async e => {
+      const v = e.target.checked;
+      _settings[field.key] = v;
+      await api('save_setting', field.key, v);
+      if (field.key === 'moonlight_mode') updateQuickInfo(_settings);
+    });
+
+  } else if (field.type === 'int' || field.type === 'float') {
+    const step = field.type === 'float' ? (field.max <= 1 ? 0.01 : 0.1) : 1;
+    const disp = field.type === 'float' ? (v => +v.toFixed(2)) : (v => Math.round(v));
+    ctrl.innerHTML = `
+      <input type="range" id="sl-${field.key}"
+        min="${field.min}" max="${field.max}" step="${step}" value="${value}">
+      <input type="number" class="num-input" id="ni-${field.key}"
+        min="${field.min}" max="${field.max}" step="${step}" value="${disp(value)}">`;
+    const sl = ctrl.querySelector(`#sl-${field.key}`);
+    const ni = ctrl.querySelector(`#ni-${field.key}`);
+    sl.addEventListener('input', async () => {
+      const v = field.type === 'float' ? parseFloat(sl.value) : parseInt(sl.value);
+      ni.value = disp(v);
+      _settings[field.key] = v;
+      await api('save_setting', field.key, v);
+      if (['udp_host','udp_port','moonlight_mode'].includes(field.key)) updateQuickInfo(_settings);
+    });
+    ni.addEventListener('change', async () => {
+      let v = parseFloat(ni.value);
+      v = Math.max(field.min, Math.min(field.max, v));
+      if (field.type === 'int') v = Math.round(v);
+      ni.value = disp(v); sl.value = v;
+      _settings[field.key] = v;
+      await api('save_setting', field.key, v);
+    });
+
+  } else {
+    ctrl.innerHTML = `<input type="text" class="text-input" id="f-${field.key}" value="${value || ''}">`;
+    const inp = ctrl.querySelector('input');
+    inp.addEventListener('change', async () => {
+      _settings[field.key] = inp.value;
+      await api('save_setting', field.key, inp.value);
+      updateQuickInfo(_settings);
+    });
+  }
+
+  row.appendChild(ctrl);
+  return row;
+}
+
+// ── Profiles ──────────────────────────────────────────────────────────────────
+async function loadProfiles() {
+  const r = await api('get_profiles');
+  const list = document.getElementById('profile-list');
+  const names = Object.keys(r.list || {});
+  if (!names.length) {
+    list.innerHTML = '<div style="color:var(--faint);font-size:12px">No profiles saved.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  for (const name of names) {
+    const item = document.createElement('div');
+    item.className = 'profile-item';
+    const isActive = name === r.active;
+    item.innerHTML = `
+      <span class="profile-name">${name}</span>
+      ${isActive ? '<span class="profile-active-tag">ACTIVE</span>' : ''}
+      <div class="profile-actions">
+        <button class="btn-icon" onclick="loadProfile('${name}')">Load</button>
+        <button class="btn-icon" onclick="deleteProfile('${name}')"
+          style="color:var(--red);border-color:rgba(239,68,68,.3)">Delete</button>
+      </div>`;
+    list.appendChild(item);
+  }
+}
+
+async function saveProfile() {
+  const name = document.getElementById('new-profile-name').value.trim();
+  if (!name) return;
+  await api('save_profile', name);
+  document.getElementById('new-profile-name').value = '';
+  loadProfiles();
+}
+
+async function loadProfile(name) {
+  const r = await api('load_profile', name);
+  if (r.ok) {
+    _settings = r.settings;
+    renderSettings('settings-scroll', SETTINGS_SCHEMA, _settings);
+    renderSettings('system-scroll',   SYSTEM_SCHEMA,   _settings);
+    updateQuickInfo(_settings);
+    loadProfiles();
+  }
+}
+
+async function deleteProfile(name) {
+  await api('delete_profile', name);
+  loadProfiles();
+}
+
+// ── Controllers ───────────────────────────────────────────────────────────────
+async function rescanControllers() {
+  const list = document.getElementById('controller-list');
+  list.innerHTML = '<div style="color:var(--faint);font-size:12px">Scanning…</div>';
+  _controllers = await api('get_controllers');
+  list.innerHTML = '';
+
+  // Auto option
+  const autoItem = document.createElement('div');
+  autoItem.className = 'controller-item';
+  autoItem.innerHTML = `
+    <label>
+      <input type="radio" name="ctrl" value="" ${!_controllerLock ? 'checked' : ''}
+        onchange="setControllerLock('')">
+      <span>Auto (first found)</span>
+    </label>`;
+  list.appendChild(autoItem);
+
+  for (const c of _controllers) {
+    const item = document.createElement('div');
+    item.className = 'controller-item';
+    const badge = c.transport === 'BT'
+      ? '<span class="controller-badge badge-bt">BT</span>'
+      : '<span class="controller-badge badge-usb">USB</span>';
+    item.innerHTML = `
+      <label>
+        <input type="radio" name="ctrl" value="${c.serial}"
+          ${_controllerLock === c.serial ? 'checked' : ''}
+          onchange="setControllerLock('${c.serial}')">
+        ${badge} <span>${c.serial || '(no serial)'}</span>
+      </label>
+      <button class="btn-icon" onclick="api('identify_controller','${c.serial}')">Identify</button>`;
+    list.appendChild(item);
+  }
+
+  if (!_controllers.length && _controllerLock === '') {
+    list.innerHTML += '<div style="color:var(--faint);font-size:12px;margin-top:6px">No controllers found. Connect a DualSense and rescan.</div>';
+  }
+}
+
+async function setControllerLock(serial) {
+  _controllerLock = serial;
+  await api('set_controller_lock', serial);
+}
+
+// ── Background ────────────────────────────────────────────────────────────────
+async function loadBgPreview(settings) {
+  // Just show placeholder text — full bg is in the window background already
+  const label = document.getElementById('bg-thumb-label');
+  label.textContent = settings.background_image_path
+    ? settings.background_image_path.split('/').pop()
+    : 'Default (Forza Horizon)';
+}
+
+async function browseBackground() {
+  const r = await api('browse_background');
+  if (r.ok && r.uri) {
+    document.body.style.backgroundImage = `url(${r.uri})`;
+    document.getElementById('bg-thumb-label').textContent = r.path.split('/').pop();
+  }
+}
+
+async function clearBackground() {
+  const r = await api('clear_background');
+  if (r.uri) {
+    document.body.style.backgroundImage = `url(${r.uri})`;
+    document.getElementById('bg-thumb-label').textContent = 'Default (Forza Horizon)';
+  }
+}
+
+// ── Logs ──────────────────────────────────────────────────────────────────────
+function appendLog(entry) {
+  const el = document.getElementById('log-container');
+  // Parse "HH:MM:SS [LEVEL] message"
+  const m = entry.msg.match(/^(\d+:\d+:\d+)\s+\[(\w+)\]\s+([\s\S]*)$/);
+  const time  = m ? m[1] : '';
+  const level = m ? m[2] : 'INFO';
+  const msg   = m ? m[3] : entry.msg;
+
+  const line = document.createElement('div');
+  line.className = `log-line log-${level}`;
+  line.innerHTML =
+    `<span class="log-time">${time}</span>` +
+    `<span class="log-level">${level}</span>` +
+    `<span class="log-msg">${escHtml(msg)}</span>`;
+  el.appendChild(line);
+  // Trim to 2000 lines
+  while (el.children.length > 2000) el.removeChild(el.firstChild);
+  if (_logAutoscroll) el.scrollTop = el.scrollHeight;
+}
+
+function clearLogs() {
+  document.getElementById('log-container').innerHTML = '';
+  api('clear_logs');
+}
+
+function toggleAutoscroll() {
+  _logAutoscroll = !_logAutoscroll;
+  const btn = document.getElementById('log-autoscroll-btn');
+  btn.textContent = _logAutoscroll ? 'Auto-scroll ON' : 'Auto-scroll OFF';
+  btn.style.color = _logAutoscroll ? 'var(--accent)' : 'var(--muted)';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

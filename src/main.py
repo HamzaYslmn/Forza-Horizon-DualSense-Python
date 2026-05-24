@@ -56,8 +56,12 @@ def run_tui(s: Settings) -> None:
 
 
 def run_gui(s: Settings) -> None:
-    from modules.gui import TriggerGUI
-    TriggerGUI(s).run()
+    if sys.platform == "darwin":
+        from modules.gui.webview_gui import WebViewGUI
+        WebViewGUI(s).run()
+    else:
+        from modules.gui import TriggerGUI
+        TriggerGUI(s).run()
 
 
 def _confirm(prompt: str) -> bool:

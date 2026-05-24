@@ -58,8 +58,8 @@ SOURCE_URL    = "https://github.com/HamzaYslmn/Forza-Horizon-DualSense-Python"
 NAV_ITEMS = ("Controls", "Profiles", "Settings", "System", "Language", "Logs")
 
 # Background image blur / dim settings
-BG_BLUR_RADIUS = 28
-BG_BRIGHTNESS  = 0.38   # 0=black  1=original
+BG_BLUR_RADIUS = 32
+BG_BRIGHTNESS  = 0.28   # 0=black  1=original
 
 
 class _QueueLogHandler(logging.Handler):
@@ -99,13 +99,19 @@ def _process_background(path: str, w: int, h: int):
     """Load (or generate), resize, blur, and darken the background image.
     Returns a PIL Image ready to convert to PhotoImage."""
     from PIL import Image, ImageFilter, ImageEnhance
+    from modules.config import paths as _paths
     w, h = max(w, 2), max(h, 2)
-    if path and os.path.isfile(path):
-        try:
-            img = Image.open(path).convert("RGB")
-        except Exception:
-            img = _make_gradient(w, h)
-    else:
+    # Priority: user custom path → bundled default → gradient
+    candidates = [path, str(_paths.DEFAULT_BG)]
+    img = None
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate):
+            try:
+                img = Image.open(candidate).convert("RGB")
+                break
+            except Exception:
+                continue
+    if img is None:
         img = _make_gradient(w, h)
     img = img.resize((w, h), Image.LANCZOS)
     img = img.filter(ImageFilter.GaussianBlur(radius=BG_BLUR_RADIUS))
@@ -342,22 +348,26 @@ class TriggerGUI:
 
     def _build_header(self):
         bar = ctk.CTkFrame(self.root, height=T.HEADER_H, corner_radius=0,
-                           fg_color=T.BG_DEEP,
-                           border_width=0)
+                           fg_color=T.GLASS_HEADER, border_width=0)
         bar.pack(side="top", fill="x")
         bar.grid_columnconfigure(0, weight=1, uniform="hdr")
         bar.grid_columnconfigure(1, weight=0)
         bar.grid_columnconfigure(2, weight=1, uniform="hdr")
         bar.grid_propagate(False)
 
-        # Left: app name
+        # Left: logo dot + app name
         left = ctk.CTkFrame(bar, fg_color="transparent")
-        left.grid(row=0, column=0, padx=(T.PAD_MD, 0), pady=0, sticky="w")
+        left.grid(row=0, column=0, padx=(T.PAD_LG, 0), pady=0, sticky="w")
+        ctk.CTkLabel(
+            left, text="●",
+            text_color=T.ACCENT,
+            font=ctk.CTkFont(size=10),
+        ).pack(side="left", padx=(0, 6))
         ctk.CTkLabel(
             left, text="FH DualSense",
             text_color=T.TEXT,
-            font=ctk.CTkFont(size=15, weight="bold"),
-        ).pack(side="left", padx=(0, T.PAD_SM))
+            font=ctk.CTkFont(size=14, weight="bold"),
+        ).pack(side="left")
 
         # Centre: status pill
         self.status_pill = W.Pill(bar, label=t("waiting"),
@@ -370,12 +380,12 @@ class TriggerGUI:
             text_color=T.TEXT_FAINT, cursor="hand2",
             font=ctk.CTkFont(size=T.FS_TINY),
         )
-        self.lbl_version.grid(row=0, column=2, padx=(0, T.PAD_MD), pady=0, sticky="e")
+        self.lbl_version.grid(row=0, column=2, padx=(0, T.PAD_LG), pady=0, sticky="e")
         self.lbl_version.bind("<Button-1>", lambda _e: self._open_url(CHANGELOG_URL))
 
-        # Separator
+        # Glow separator
         ctk.CTkFrame(self.root, height=1, corner_radius=0,
-                     fg_color=T.BORDER).pack(side="top", fill="x")
+                     fg_color=T.GLASS_BORDER).pack(side="top", fill="x")
 
     def _build_body(self):
         body = ctk.CTkFrame(self.root, corner_radius=0, fg_color="transparent")
@@ -383,60 +393,90 @@ class TriggerGUI:
 
         # ── Sidebar ───────────────────────────────────────────────────────────
         sidebar = ctk.CTkFrame(body, width=T.SIDEBAR_W, corner_radius=0,
-                               fg_color=T.BG_DEEP, border_width=0)
+                               fg_color=T.GLASS_HEADER, border_width=0)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
-        # Nav items
-        nav_box = ctk.CTkFrame(sidebar, fg_color="transparent")
-        nav_box.pack(side="top", fill="x", padx=T.PAD_SM, pady=(T.PAD_MD, 0))
+        # Nav glass card
+        nav_card = ctk.CTkFrame(sidebar,
+                                fg_color=T.BG_PANEL,
+                                corner_radius=T.GLASS_RADIUS,
+                                border_width=1,
+                                border_color=T.GLASS_BORDER)
+        nav_card.pack(fill="x", padx=T.PAD_SM, pady=(T.PAD_MD, 0))
 
         self._nav_buttons: dict[str, ctk.CTkButton] = {}
         for key in NAV_ITEMS:
             btn = ctk.CTkButton(
-                nav_box, text=f"  {T.ICON[key]}   {t(key)}", anchor="w",
-                height=36, corner_radius=8,
+                nav_card,
+                text=f"  {T.ICON[key]}   {t(key)}", anchor="w",
+                height=34, corner_radius=8,
                 fg_color="transparent", hover_color=T.BG_HOVER,
                 text_color=T.TEXT_MUTED,
                 font=ctk.CTkFont(size=T.FS_BODY),
                 command=lambda k=key: self._select_nav(k),
             )
-            btn.pack(side="top", fill="x", pady=1)
+            btn.pack(side="top", fill="x", padx=T.PAD_XS, pady=1)
             self._nav_buttons[key] = btn
+        ctk.CTkFrame(nav_card, fg_color="transparent", height=T.PAD_XS).pack()
 
-        # ── Start / Stop buttons ──────────────────────────────────────────────
-        ctrl_box = ctk.CTkFrame(sidebar, fg_color="transparent")
-        ctrl_box.pack(side="top", fill="x", padx=T.PAD_SM, pady=(T.PAD_MD, 0))
-
-        self._btn_start = W.StartButton(ctrl_box, command=self._on_start)
-        self._btn_start.pack(fill="x", pady=(0, T.PAD_XS))
-
-        self._btn_stop = W.StopButton(ctrl_box, command=self._on_stop)
-        self._btn_stop.pack(fill="x")
+        # Start / Stop glass card
+        ctrl_card = ctk.CTkFrame(sidebar,
+                                 fg_color=T.BG_PANEL,
+                                 corner_radius=T.GLASS_RADIUS,
+                                 border_width=1,
+                                 border_color=T.GLASS_BORDER)
+        ctrl_card.pack(fill="x", padx=T.PAD_SM, pady=(T.PAD_SM, 0))
+        ctk.CTkFrame(ctrl_card, fg_color="transparent", height=T.PAD_SM).pack()
+        self._btn_start = W.StartButton(ctrl_card, command=self._on_start)
+        self._btn_start.pack(fill="x", padx=T.PAD_SM, pady=(0, T.PAD_XS))
+        self._btn_stop = W.StopButton(ctrl_card, command=self._on_stop)
+        self._btn_stop.pack(fill="x", padx=T.PAD_SM, pady=(0, T.PAD_SM))
 
         # ── Sidebar footer ────────────────────────────────────────────────────
         sfooter = ctk.CTkFrame(sidebar, fg_color="transparent")
-        sfooter.pack(side="bottom", fill="x", padx=T.PAD_SM, pady=(0, T.PAD_SM))
+        sfooter.pack(side="bottom", fill="x", padx=T.PAD_SM, pady=(0, T.PAD_MD))
 
-        # Attribution — required by license
-        credit_frame = ctk.CTkFrame(sfooter,
-                                    fg_color=T.BG_HOVER,
-                                    corner_radius=8,
-                                    border_width=1,
-                                    border_color=T.GLASS_BORDER)
-        credit_frame.pack(fill="x", pady=(0, T.PAD_SM))
+        changelog_btn = ctk.CTkButton(
+            sfooter,
+            text=t("Changelog"),
+            height=26, corner_radius=8,
+            fg_color="transparent", hover_color=T.BG_HOVER,
+            text_color=T.TEXT_FAINT,
+            border_width=1, border_color=T.BORDER,
+            font=ctk.CTkFont(size=T.FS_SMALL),
+            command=lambda: self._open_url(CHANGELOG_URL),
+        )
+        changelog_btn.pack(fill="x", pady=(0, T.PAD_XS))
 
+        sponsor_btn = ctk.CTkButton(
+            sfooter,
+            text=f"{T.ICON['heart']}  {t('Sponsor')}",
+            height=34, corner_radius=10,
+            fg_color=T.PINK, hover_color="#d43882",
+            text_color="#ffffff",
+            font=ctk.CTkFont(size=T.FS_BODY, weight="bold"),
+            command=lambda: self._open_url(SPONSOR_URL),
+        )
+        sponsor_btn.pack(fill="x", pady=(0, T.PAD_SM))
+
+        # Attribution — required by AGPLv3 license
+        credit_card = ctk.CTkFrame(sfooter,
+                                   fg_color=T.BG_PANEL,
+                                   corner_radius=10,
+                                   border_width=1,
+                                   border_color=T.GLASS_BORDER)
+        credit_card.pack(fill="x")
         ctk.CTkLabel(
-            credit_frame,
+            credit_card,
             text="Originally created by",
             text_color=T.TEXT_FAINT,
             font=ctk.CTkFont(size=T.FS_TINY),
             anchor="center",
         ).pack(pady=(T.PAD_SM, 1))
-
         name_lbl = ctk.CTkLabel(
-            credit_frame,
-            text="Hamza Yeşilmen (HamzaYslmn)",
+            credit_card,
+            text="Hamza Yeşilmen",
             text_color=T.ACCENT_SOFT,
             font=ctk.CTkFont(size=T.FS_TINY, weight="bold"),
             cursor="hand2",
@@ -445,31 +485,9 @@ class TriggerGUI:
         name_lbl.pack(pady=(0, T.PAD_SM))
         name_lbl.bind("<Button-1>", lambda _e: self._open_url(SOURCE_URL))
 
-        sponsor_btn = ctk.CTkButton(
-            sfooter,
-            text=f"{T.ICON['heart']}  {t('Sponsor')}",
-            height=34, corner_radius=8,
-            fg_color=T.PINK, hover_color="#d43882",
-            text_color="#ffffff",
-            font=ctk.CTkFont(size=T.FS_BODY, weight="bold"),
-            command=lambda: self._open_url(SPONSOR_URL),
-        )
-        sponsor_btn.pack(fill="x", pady=(0, T.PAD_XS))
-
-        changelog_btn = ctk.CTkButton(
-            sfooter,
-            text=t("Changelog"),
-            height=26, corner_radius=6,
-            fg_color="transparent", hover_color=T.BG_HOVER,
-            text_color=T.TEXT_FAINT,
-            font=ctk.CTkFont(size=T.FS_SMALL),
-            command=lambda: self._open_url(CHANGELOG_URL),
-        )
-        changelog_btn.pack(fill="x")
-
-        # Vertical separator
+        # Glow vertical separator
         ctk.CTkFrame(body, width=1, corner_radius=0,
-                     fg_color=T.BORDER).pack(side="left", fill="y")
+                     fg_color=T.GLASS_BORDER).pack(side="left", fill="y")
 
         # ── Content area ──────────────────────────────────────────────────────
         self._content = ctk.CTkFrame(body, corner_radius=0, fg_color="transparent")

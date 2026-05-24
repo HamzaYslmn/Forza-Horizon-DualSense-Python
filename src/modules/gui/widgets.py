@@ -60,7 +60,7 @@ class Danger(ctk.CTkLabel):
 # ── Surfaces ──────────────────────────────────────────────────────────────────
 
 class Card(ctk.CTkFrame):
-    """Glass-morphism card: dark background, subtle glowing border."""
+    """Glass-morphism card: dark frosted background, glowing border."""
     def __init__(self, parent, **kw):
         kw.setdefault("fg_color", T.BG_PANEL)
         kw.setdefault("corner_radius", T.GLASS_RADIUS)
@@ -70,7 +70,7 @@ class Card(ctk.CTkFrame):
 
 
 class GlassCard(ctk.CTkFrame):
-    """Slightly elevated card for hero/status sections."""
+    """Elevated glass card with brighter border."""
     def __init__(self, parent, **kw):
         kw.setdefault("fg_color", T.BG_HOVER)
         kw.setdefault("corner_radius", T.GLASS_RADIUS)
@@ -140,24 +140,24 @@ class PrimaryButton(ctk.CTkButton):
 class StartButton(ctk.CTkButton):
     """Large green start button."""
     def __init__(self, parent, command=None, **kw):
-        kw.setdefault("height", 40)
+        kw.setdefault("height", 42)
         kw.setdefault("fg_color", T.GREEN)
         kw.setdefault("hover_color", T.GREEN_HOVER)
         kw.setdefault("text_color", "white")
         kw.setdefault("corner_radius", 10)
-        kw.setdefault("font", ctk.CTkFont(size=T.FS_BODY, weight="bold"))
+        kw.setdefault("font", ctk.CTkFont(size=13, weight="bold"))
         super().__init__(parent, text=f"  {T.ICON['play']}  Start", command=command, **kw)
 
 
 class StopButton(ctk.CTkButton):
     """Large red stop button."""
     def __init__(self, parent, command=None, **kw):
-        kw.setdefault("height", 40)
+        kw.setdefault("height", 42)
         kw.setdefault("fg_color", T.RED)
         kw.setdefault("hover_color", T.RED_HOVER)
         kw.setdefault("text_color", "white")
         kw.setdefault("corner_radius", 10)
-        kw.setdefault("font", ctk.CTkFont(size=T.FS_BODY, weight="bold"))
+        kw.setdefault("font", ctk.CTkFont(size=13, weight="bold"))
         super().__init__(parent, text=f"  {T.ICON['stop']}  Stop", command=command, **kw)
 
 
