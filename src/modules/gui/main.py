@@ -361,11 +361,12 @@ class TriggerGUI:
         self._quit()
 
     def _hide_to_tray(self):
+        if not self._tray.start():
+            return
         try:
             self.root.withdraw()
         except tk.TclError:
-            return
-        self._tray.start()
+            pass
 
     def _on_unmap(self, event):
         if event.widget is not self.root:

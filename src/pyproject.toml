@@ -11,6 +11,7 @@ dependencies = [
     "pillow>=11.0.0",
     "psutil>=7.2.2",
     "pystray>=0.19.5",
+    "PyGObject>=3.42.0; sys_platform == 'linux'",
     "textual>=8.2.5",
 ]
 

@@ -93,6 +93,8 @@ The launcher handles downloading the app, preparing the environment, and running
 > A standalone **Windows `.exe`** is also attached to each release as an experimental option. The **recommended** way to run the app is still **`win_start.bat`** — it self-updates and works the same across every Windows version.
 
 > **Linux extras:** install `libhidapi` (`sudo apt install libhidapi-hidraw0` / `sudo pacman -S hidapi` / `sudo dnf install hidapi`) and the udev rule from `app/packaging/linux/70-dualsense.rules`. Then unplug/replug the controller once.
+>
+> **Wayland tray:** the minimize-to-tray icon requires `libappindicator` (or `libayatana-appindicator`) and PyGObject. Install them with `sudo apt install gir1.2-ayatanaappindicator3-0.1 python3-gi` (Debian/Ubuntu), `sudo pacman -S libappindicator-gtk3 python-gobject` (Arch), or `sudo dnf install libappindicator-gtk3 python3-gobject` (Fedora). The app auto-selects the `appindicator` backend on Wayland.
 
 ### 🎮 Playing with SISR (Xbox App / Windows Store users)
 

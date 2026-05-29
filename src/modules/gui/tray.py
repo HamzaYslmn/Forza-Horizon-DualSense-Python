@@ -5,12 +5,31 @@ All Tk interactions are marshalled back to the main thread via root.after.
 """
 from __future__ import annotations
 
+import logging
+import os
+import sys
 import threading
 from typing import Callable, Optional
 
 import tkinter as tk
 
 from modules.config import paths
+
+log = logging.getLogger("fhds")
+
+
+def _ensure_backend():
+    """On Linux Wayland, force the appindicator backend so the tray icon
+    actually appears. XEmbed doesn't work under pure Wayland compositors."""
+    if sys.platform != "linux":
+        return
+    if os.environ.get("PYSTRAY_BACKEND"):
+        return  # user explicitly chose a backend; respect it
+    if os.environ.get("WAYLAND_DISPLAY") or os.environ.get("XDG_SESSION_TYPE") == "wayland":
+        os.environ["PYSTRAY_BACKEND"] = "appindicator"
+
+
+_ensure_backend()
 
 
 class TrayController:
@@ -22,14 +41,16 @@ class TrayController:
         self._thread: Optional[threading.Thread] = None
         self._started = False
 
-    def start(self) -> None:
+    def start(self) -> bool:
+        """Start the tray icon. Returns True if the icon is running, False if unavailable."""
         if self._started:
-            return
+            return True
         try:
             import pystray
             from PIL import Image
-        except Exception:
-            return
+        except Exception as e:
+            log.warning("System tray unavailable (missing pystray or Pillow): %s", e)
+            return False
         png = paths.ICON_PNG
         try:
             image = Image.open(str(png))
@@ -55,6 +76,9 @@ class TrayController:
         self._thread = threading.Thread(target=self._icon.run, name="fhds-tray", daemon=True)
         self._thread.start()
         self._started = True
+        backend = os.environ.get("PYSTRAY_BACKEND", "auto")
+        log.info("System tray icon started (backend: %s)", backend)
+        return True
 
     def stop(self) -> None:
         if self._icon is not None:
