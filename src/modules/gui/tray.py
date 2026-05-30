@@ -5,12 +5,22 @@ All Tk interactions are marshalled back to the main thread via root.after.
 """
 from __future__ import annotations
 
+import os
+import sys
 import threading
 from typing import Callable, Optional
 
 import tkinter as tk
 
 from modules.config import paths
+
+# On Wayland, XEmbed trays don't show; force the appindicator backend.
+if (
+    sys.platform == "linux"
+    and not os.environ.get("PYSTRAY_BACKEND")
+    and (os.environ.get("WAYLAND_DISPLAY") or os.environ.get("XDG_SESSION_TYPE") == "wayland")
+):
+    os.environ["PYSTRAY_BACKEND"] = "appindicator"
 
 
 class TrayController:
@@ -22,14 +32,15 @@ class TrayController:
         self._thread: Optional[threading.Thread] = None
         self._started = False
 
-    def start(self) -> None:
+    def start(self) -> bool:
+        """Start the tray icon. Returns True if running, False if unavailable."""
         if self._started:
-            return
+            return True
         try:
             import pystray
             from PIL import Image
         except Exception:
-            return
+            return False
         png = paths.ICON_PNG
         try:
             image = Image.open(str(png))
@@ -55,6 +66,7 @@ class TrayController:
         self._thread = threading.Thread(target=self._icon.run, name="fhds-tray", daemon=True)
         self._thread.start()
         self._started = True
+        return True
 
     def stop(self) -> None:
         if self._icon is not None:
