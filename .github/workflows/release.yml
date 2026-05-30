@@ -3,8 +3,8 @@ name: release
 # Triggers:
 #   - tag vX.Y.Z                              -> stable vX.Y.Z
 #   - commit msg contains "release vX.Y.Z"    -> stable vX.Y.Z
-#   - commit msg contains "prerelease"        -> rolling DEV_TAG prerelease
-#   - manual workflow_dispatch                -> rolling DEV_TAG prerelease
+#   - commit msg contains "prerelease"        -> prerelease at (latest stable + patch)
+#   - manual workflow_dispatch                -> prerelease at (latest stable + patch)
 
 on:
   push:
@@ -14,9 +14,6 @@ on:
 
 permissions:
   contents: write
-
-env:
-  DEV_TAG: v999.0.0
 
 jobs:
   # MARK: parse trigger + move rolling tag --------------------------------
@@ -32,17 +29,26 @@ jobs:
 
       - name: Parse trigger
         id: parse
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
           tag=""; prerelease=""; title=""
           msg=$(git log -1 --pretty=%s)
 
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            # tag push -> stable
             tag="${GITHUB_REF#refs/tags/}"; prerelease=false; title="$tag"
           elif [[ "$msg" =~ release[[:space:]]+(v[0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            # explicit "release vX.Y.Z" commit -> stable
             tag="${BASH_REMATCH[1]}"; prerelease=false; title="$tag"
           elif [[ "$msg" == *prerelease* || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            tag="$DEV_TAG"; prerelease=true; title="🧪 dev - Rolling Test Build"
+            # prerelease -> next patch above the latest published stable release
+            base=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" -q .tag_name 2>/dev/null || true)
+            base="${base:-v0.0.0}"
+            IFS='.' read -r maj min pat <<< "${base#v}"
+            tag="v${maj}.${min}.$((pat + 1))"
+            prerelease=true; title="🧪 ${tag} - Prerelease"
           fi
 
           echo "tag=$tag"               >> "$GITHUB_OUTPUT"
@@ -116,10 +122,47 @@ jobs:
           name: exe
           path: packaging/windows/dist/FH-DualSense-*.exe
 
+  # MARK: Linux standalone ELF -------------------------------------------
+  elf:
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: needs.prepare.outputs.tag
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      # AppIndicator/GTK so the pystray tray works in the frozen build.
+      - name: Install system tray libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gir1.2-ayatanaappindicator3-0.1 \
+            python3-gi gir1.2-gtk-3.0
+
+      - name: Build FH-DualSense (ELF)
+        run: |
+          tag="${{ needs.prepare.outputs.tag }}"
+          uvx --from "pyinstaller>=6.11.1" \
+              --with customtkinter --with textual \
+              --with hidapi --with psutil --with dotenv \
+              --with pystray --with pillow \
+              pyinstaller "$GITHUB_WORKSPACE/packaging/linux/fhds.spec" \
+              --distpath "$GITHUB_WORKSPACE/packaging/linux/dist" \
+              --workpath "$GITHUB_WORKSPACE/packaging/linux/build" \
+              --noconfirm --clean
+          mv "$GITHUB_WORKSPACE/packaging/linux/dist/FH-DualSense" \
+             "$GITHUB_WORKSPACE/packaging/linux/dist/FH-DualSense-$tag"
+          echo "Built packaging/linux/dist/FH-DualSense-$tag"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elf
+          path: packaging/linux/dist/FH-DualSense-v*
+
   # MARK: combined release -----------------------------------------------
   release:
     runs-on: ubuntu-latest
-    needs: [prepare, bundle, exe]
+    needs: [prepare, bundle, exe, elf]
     if: needs.prepare.outputs.tag
     steps:
       - uses: actions/download-artifact@v4
@@ -129,6 +172,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: exe
+          path: release/
+      - uses: actions/download-artifact@v4
+        with:
+          name: elf
           path: release/
 
       - uses: softprops/action-gh-release@v2
@@ -142,9 +189,9 @@ jobs:
 
             Download **`win_start.bat`** (Windows) or **`linux_start.sh`** (Linux), drop it in any folder, and double-click. The launcher fetches `fhds.zuv.py`, installs `uv` if needed, runs the app, and self-updates on every launch. This is the supported path and works the same across all Windows versions.
 
-            ## 🧪 Experimental: standalone EXE
+            ## 🧪 Experimental: standalone binaries
 
-            `FH-DualSense.exe` is a one-file GUI build (no install, MEIPASS auto-cleans on exit). It is **experimental** and does **not** self-update. Prefer `win_start.bat` unless you specifically can't run the launcher.
+            `FH-DualSense.exe` (Windows) and `FH-DualSense-vX.Y.Z` (Linux) are one-file GUI builds (no install, MEIPASS auto-cleans on exit). They are **experimental** and do **not** self-update. The Linux binary is built on Ubuntu, so very old or very different distros may need the launcher instead. Prefer the launcher scripts unless you specifically can't run them.
 
             ---
             > **Heads up**

@@ -1,0 +1,10 @@
+# Build outputs
+dist/
+build/
+
+# PyInstaller auto-generated (regenerated each build from pyproject.toml)
+version_info.txt
+*.manifest
+
+# fhds.spec IS the build script - track it
+!fhds.spec

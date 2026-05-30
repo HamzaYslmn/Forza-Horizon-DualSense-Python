@@ -96,10 +96,10 @@ Port `5300`.
 ## CI gating
 
 `.github/workflows/release.yml`:
-- Push to `dev` with `prerelease` in commit msg -> rolling `v999.0.0` prerelease.
+- Push to `dev` with `prerelease` in commit msg -> prerelease tagged at the next patch above the latest stable release (e.g. latest `v1.4.5` -> `v1.4.6`).
 - Push to `main` with `release vX.Y.Z` in commit msg -> stable `vX.Y.Z`.
 - Push tag `v*.*.*` -> stable release.
-- `workflow_dispatch` -> rolling prerelease.
+- `workflow_dispatch` -> prerelease at the next patch (same rule as above).
 
 ## Env vars
 

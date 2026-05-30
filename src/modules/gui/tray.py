@@ -30,6 +30,13 @@ def _ensure_backend():
 
 
 _ensure_backend()
+# On Wayland, XEmbed trays don't show; force the appindicator backend.
+if (
+    sys.platform == "linux"
+    and not os.environ.get("PYSTRAY_BACKEND")
+    and (os.environ.get("WAYLAND_DISPLAY") or os.environ.get("XDG_SESSION_TYPE") == "wayland")
+):
+    os.environ["PYSTRAY_BACKEND"] = "appindicator"
 
 
 class TrayController:
