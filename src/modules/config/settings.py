@@ -33,6 +33,14 @@ class Settings:
     enable_handbrake_bonus: bool = True
     handbrake_bonus: int = 60                 # flat extra force while handbrake is engaged
 
+    # MARK: L2 surface-type brake
+    # Modulates brake resistance based on surface type.
+    # Tarmac = firm, dirt = softer, gravel = softest. Off by default.
+    enable_surface_brake: bool = False
+    surface_brake_tarmac: float = 1.0         # multiplier on tarmac (1.0 = unchanged)
+    surface_brake_dirt: float = 0.5           # multiplier on dirt
+    surface_brake_gravel: float = 0.25        # multiplier on gravel/water
+
     # MARK: L2 ABS pulse
     # Vibrates when tire slip crosses thresholds under hard braking.
     enable_abs: bool = True
@@ -52,6 +60,13 @@ class Settings:
     throttle_curve: float = 5.0               # parabolic exponent; higher = softer early, firmer near wall
     throttle_wall_engage_at: int = 250        # byte that triggers firmware wall. DO NOT CHANGE
     throttle_wall_release_at: int = 200       # hysteresis exit byte. DO NOT CHANGE
+
+    # MARK: R2 speed-based throttle
+    # Extra throttle resistance at low speed; fades as speed rises.
+    # boost=0 means off (no extra force). Flat additive at 0 km/h, fading to normal by fade_km.
+    enable_speed_throttle: bool = True
+    speed_throttle_boost: int = 30            # extra force added at standstill (0 = off)
+    speed_throttle_fade_km: float = 80.0     # speed where boost fully fades
 
     # MARK: R2 rev limiter
     # Vibrates when rpm/max_rpm exceeds the ratio; brief hold smooths rpm bounce.
@@ -77,6 +92,15 @@ class Settings:
     idle_amp_low: int = 1                     # quiet half of the cycle
     idle_amp_high: int = 30                  # loud half of the cycle
     idle_period_s: float = 0.5                # full cycle length (sec)
+
+    # MARK: R2 turbo lag
+    # Brief deep vibration on R2 when boost pressure is climbing, simulating
+    # turbo lag before full power kicks in. Silent at steady-state or zero boost.
+    enable_turbo_lag: bool = True
+    turbo_lag_freq: int = 8                   # deep rumble frequency (Hz)
+    turbo_lag_amp: int = 40                   # max vibration amplitude
+    turbo_lag_threshold: float = 0.15         # minimum boost change per tick to trigger
+    turbo_lag_cooldown_ms: float = 300.0      # min time between rumbles (suppresses jitter)
 
     # MARK: Gear shift
     # One short burst on up/downshift while moving.

@@ -142,4 +142,41 @@ STRINGS = {
         "言語を選択し、アプリを再起動して適用してください。",
     "Restart the app to apply the new language.":
         "新しい言語を適用するにはアプリを再起動してください。",
+    "Speed-based throttle": "速度ベースのスロットル",
+    "Extra force at standstill": "停止時の追加力",
+    "Fade-out speed (km/h)": "減衰速度 (km/h)",
+    "Extra resistance at low speed for precise control, lighter at high speed.":
+        "低速では精密操作のため抵抗を増し、高速では軽くします。",
+    "0 = off. Flat resistance added at 0 km/h, fading to normal.":
+        "0 = オフ。0 km/hで平坦な抵抗が追加され、通常まで減衰します。",
+    "Speed where boost fully fades. Default 80.":
+        "ブーストが完全に減衰する速度。デフォルト80。",
+    "Surface brake resistance": "路面ブレーキ抵抗",
+    "Tarmac multiplier": "ターマック乗数",
+    "Dirt multiplier": "ダート乗数",
+    "Gravel multiplier": "砂利乗数",
+    "Softer brake on loose surfaces, firmer on tarmac.":
+        "緩い路面ではブレーキが柔らかく、ターマックでは硬くなります。",
+    "1.0 = unchanged. Scales final resistance force.":
+        "1.0 = 変更なし。最終抵抗力をスケールします。",
+    "Lower = softer brake on dirt. Default 0.5.":
+        "低い = ダートでより柔らかいブレーキ。デフォルト0.5。",
+    "Lower = softer brake on gravel/water. Default 0.25.":
+        "低い = 砂利/水でより柔らかいブレーキ。デフォルト0.25。",
+    "Turbo lag": "ターボラグ",
+    "Turbo lag vibration": "ターボラグ振動",
+    "Rumble speed (Hz)": "振動速度 (Hz)",
+    "Rumble strength": "振動強度",
+    "Boost change sensitivity": "ブースト変化感度",
+    "Brief R2 rumble when boost pressure climbs.":
+        "ブースト圧力上昇時の短いR2振動。",
+    "Deep rumble frequency. Default 8.":
+        "低い振動周波数。デフォルト8。",
+    "Max vibration amplitude. Default 40.":
+        "最大振動振幅。デフォルト40。",
+    "Min boost delta per tick to trigger. Default 0.15.":
+        "トリガーするtickあたりの最小ブースト変化。デフォルト0.15。",
+    "Cooldown (ms)": "クールダウン (ms)",
+    "Min gap between rumbles. Suppresses steady-state jitter. Default 300.":
+        "振動間の最小間隔。定常状態のジッターを抑制します。デフォルト300。",
 }

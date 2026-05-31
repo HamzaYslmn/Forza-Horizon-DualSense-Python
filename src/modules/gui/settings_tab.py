@@ -32,10 +32,28 @@ SETTING_SECTIONS = [
         ("brake_static_wall_at", "Wall position on the trigger", 0, 255, ""),
         ("brake_static_wall_force", "Wall hardness", 0, 255, ""),
     ]),
+    ("Surface brake resistance", [
+        ("enable_surface_brake", "Surface brake resistance", None, None,
+         "Softer brake on loose surfaces, firmer on tarmac."),
+        ("surface_brake_tarmac", "Tarmac multiplier", 0.0, 2.0,
+         "1.0 = unchanged. Scales final resistance force."),
+        ("surface_brake_dirt", "Dirt multiplier", 0.0, 2.0,
+         "Lower = softer brake on dirt. Default 0.5."),
+        ("surface_brake_gravel", "Gravel multiplier", 0.0, 2.0,
+         "Lower = softer brake on gravel/water. Default 0.25."),
+    ]),
     ("Right trigger - Gas force", [
         ("throttle_baseline_force", "Resting stiffness", 0, 255, ""),
         ("throttle_max_force", "Hard-press stiffness", 0, 255, ""),
         ("throttle_curve", "Stiffness curve shape", 0.1, 20.0, ""),
+    ]),
+    ("Speed-based throttle", [
+        ("enable_speed_throttle", "Speed-based throttle", None, None,
+         "Extra resistance at low speed for precise control, lighter at high speed."),
+        ("speed_throttle_boost", "Extra force at standstill", 0, 255,
+         "0 = off. Flat resistance added at 0 km/h, fading to normal."),
+        ("speed_throttle_fade_km", "Fade-out speed (km/h)", 0.0, 500.0,
+         "Speed where boost fully fades. Default 80."),
     ]),
     ("ABS (anti-lock brake) rumble", [
         ("abs_brake_threshold", "Only when braking harder than", 0, 255, ""),
@@ -56,6 +74,18 @@ SETTING_SECTIONS = [
     ]),
     ("Idle buzz", [
         ("idle_amp_high", "Idle strength", 0, 255, ""),
+    ]),
+    ("Turbo lag", [
+        ("enable_turbo_lag", "Turbo lag vibration", None, None,
+         "Brief R2 rumble when boost pressure climbs."),
+        ("turbo_lag_freq", "Rumble speed (Hz)", 0, 255,
+         "Deep rumble frequency. Default 8."),
+        ("turbo_lag_amp", "Rumble strength", 0, 255,
+         "Max vibration amplitude. Default 40."),
+        ("turbo_lag_threshold", "Boost change sensitivity", 0.0, 1.0,
+         "Min boost delta per tick to trigger. Default 0.15."),
+        ("turbo_lag_cooldown_ms", "Cooldown (ms)", 0.0, 2000.0,
+         "Min gap between rumbles. Suppresses steady-state jitter. Default 300."),
     ]),
     ("Gear shift thump", [
         ("gear_shift_freq", "Thump speed (Hz)", 0, 255, ""),

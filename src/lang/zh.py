@@ -142,4 +142,41 @@ STRINGS = {
         "选择一种语言，然后重启应用以应用更改。",
     "Restart the app to apply the new language.":
         "重启应用以应用新语言。",
+    "Speed-based throttle": "基于速度的油门",
+    "Extra force at standstill": "静止时额外力度",
+    "Fade-out speed (km/h)": "衰减速度 (km/h)",
+    "Extra resistance at low speed for precise control, lighter at high speed.":
+        "低速时增加阻力以实现精确控制，高速时更轻。",
+    "0 = off. Flat resistance added at 0 km/h, fading to normal.":
+        "0 = 关闭。在0 km/h时增加平坦阻力，逐渐衰减至正常。",
+    "Speed where boost fully fades. Default 80.":
+        "增益完全衰减的速度。默认80。",
+    "Surface brake resistance": "路面刹车阻力",
+    "Tarmac multiplier": "柏油路倍率",
+    "Dirt multiplier": "泥土路倍率",
+    "Gravel multiplier": "碎石路倍率",
+    "Softer brake on loose surfaces, firmer on tarmac.":
+        "松散路面刹车更软，柏油路更硬。",
+    "1.0 = unchanged. Scales final resistance force.":
+        "1.0 = 不变。缩放最终阻力力度。",
+    "Lower = softer brake on dirt. Default 0.5.":
+        "越低 = 泥土路刹车越软。默认0.5。",
+    "Lower = softer brake on gravel/water. Default 0.25.":
+        "越低 = 碎石/水面刹车越软。默认0.25。",
+    "Turbo lag": "涡轮迟滞",
+    "Turbo lag vibration": "涡轮迟滞振动",
+    "Rumble speed (Hz)": "轰鸣速度 (Hz)",
+    "Rumble strength": "轰鸣强度",
+    "Boost change sensitivity": "增压变化灵敏度",
+    "Brief R2 rumble when boost pressure climbs.":
+        "增压压力上升时R2短暂轰鸣。",
+    "Deep rumble frequency. Default 8.":
+        "低沉轰鸣频率。默认8。",
+    "Max vibration amplitude. Default 40.":
+        "最大振动幅度。默认40。",
+    "Min boost delta per tick to trigger. Default 0.15.":
+        "每次触发最小增压变化量。默认0.15。",
+    "Cooldown (ms)": "冷却时间 (ms)",
+    "Min gap between rumbles. Suppresses steady-state jitter. Default 300.":
+        "振动间最短间隔。抑制稳态抖动。默认300。",
 }

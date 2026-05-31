@@ -142,4 +142,41 @@ STRINGS = {
         "Bir dil seçin, ardından uygulamak için uygulamayı yeniden başlatın.",
     "Restart the app to apply the new language.":
         "Yeni dili uygulamak için uygulamayı yeniden başlatın.",
+    "Speed-based throttle": "Hıza dayalı gaz",
+    "Extra force at standstill": "Dururken ekstra kuvvet",
+    "Fade-out speed (km/h)": "Sönme hızı (km/s)",
+    "Extra resistance at low speed for precise control, lighter at high speed.":
+        "Düşük hızda hassas kontrol için ekstra direnç, yüksek hızda daha hafif.",
+    "0 = off. Flat resistance added at 0 km/h, fading to normal.":
+        "0 = kapalı. 0 km/s'de düz direnç eklenir, normale kadar sönür.",
+    "Speed where boost fully fades. Default 80.":
+        "Takviyenin tamamen söndüğü hız. Varsayılan 80.",
+    "Surface brake resistance": "Yüzey freni direnci",
+    "Tarmac multiplier": "Asfalt çarpanı",
+    "Dirt multiplier": "Toprak çarpanı",
+    "Gravel multiplier": "Çakıl çarpanı",
+    "Softer brake on loose surfaces, firmer on tarmac.":
+        "Gevşek yüzeylerde daha yumuşak fren, asfaltta daha sert.",
+    "1.0 = unchanged. Scales final resistance force.":
+        "1.0 = değişmez. Son direnç kuvvetini ölçekler.",
+    "Lower = softer brake on dirt. Default 0.5.":
+        "Düşük = toprakta daha yumuşak fren. Varsayılan 0.5.",
+    "Lower = softer brake on gravel/water. Default 0.25.":
+        "Düşük = çakıl/suda daha yumuşak fren. Varsayılan 0.25.",
+    "Turbo lag": "Turbo gecikmesi",
+    "Turbo lag vibration": "Turbo gecikme titreşimi",
+    "Rumble speed (Hz)": "Gürültü hızı (Hz)",
+    "Rumble strength": "Gürültü gücü",
+    "Boost change sensitivity": "Boost değişim hassasiyeti",
+    "Brief R2 rumble when boost pressure climbs.":
+        "Boost basıncı yükselirken kısa R2 gürültüsü.",
+    "Deep rumble frequency. Default 8.":
+        "Derin gürültü frekansı. Varsayılan 8.",
+    "Max vibration amplitude. Default 40.":
+        "Maks titreşim genliği. Varsayılan 40.",
+    "Min boost delta per tick to trigger. Default 0.15.":
+        "Tetiklemek için tick başına min boost deltası. Varsayılan 0.15.",
+    "Cooldown (ms)": "Bekleme (ms)",
+    "Min gap between rumbles. Suppresses steady-state jitter. Default 300.":
+        "Gürültüler arası min boşluk. Kararlı durum titremesini bastırır. Varsayılan 300.",
 }

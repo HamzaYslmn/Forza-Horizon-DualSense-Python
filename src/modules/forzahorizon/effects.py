@@ -68,6 +68,8 @@ class TriggerAnimations:
         self._prev_gear = None
         self._shift_until = 0.0
         self._rev_until = 0.0
+        self._prev_boost = 0.0
+        self._turbo_last_fire = 0.0
 
     def arm_shift(self, t, s, now):
         gear = t["gear"]
@@ -139,6 +141,21 @@ class TriggerAnimations:
             return vibrate(45, min(255, int(amp * 2)))
         return vibrate(130, amp)                             # tarmac: sharp squeal
 
+    def turbo_lag(self, t, s, now):
+        if not s.enable_turbo_lag:
+            self._prev_boost = t["boost"]
+            return None
+        boost = t["boost"]
+        delta = boost - self._prev_boost
+        self._prev_boost = boost
+        if delta < s.turbo_lag_threshold or boost < 0.1:
+            return None
+        if now - self._turbo_last_fire < s.turbo_lag_cooldown_ms / 1000.0:
+            return None
+        self._turbo_last_fire = now
+        amp = min(255, int(s.turbo_lag_amp * min(delta / 0.2, 1.0)))
+        return vibrate(s.turbo_lag_freq, amp)
+
     def abs_pulse(self, t, s):
         if not s.enable_abs:
             return None
@@ -155,6 +172,19 @@ class TriggerAnimations:
             return rigid(s.handbrake_bonus) if handbrake else off()
         force = _ramp(t["brake"], s.brake_deadzone, s.brake_baseline_force,
                       s.brake_max_force, s.brake_curve, s.brake_wall_engage_at)
+        if s.enable_surface_brake and t["brake"] > 0:
+            wheels = DRIVEN_WHEELS.get(t["drive_train"], ("fl", "fr", "rl", "rr"))
+            if any(t[f"wheel_in_puddle_{w}"] > 0 for w in wheels):
+                mult = s.surface_brake_gravel
+            else:
+                rumble = max(abs(t[f"surface_rumble_{w}"]) for w in wheels)
+                if rumble > 0.30:
+                    mult = s.surface_brake_gravel
+                elif rumble > 0.10:
+                    mult = s.surface_brake_dirt
+                else:
+                    mult = s.surface_brake_tarmac
+            force = max(0, int(force * mult))
         if handbrake:
             force += s.handbrake_bonus
         return rigid(force)
@@ -162,8 +192,15 @@ class TriggerAnimations:
     def throttle_ramp(self, t, s):
         if not s.enable_throttle_resistance:
             return off()
-        return rigid(_ramp(t["accel"], s.accel_deadzone, s.throttle_baseline_force,
-                           s.throttle_max_force, s.throttle_curve, s.throttle_wall_engage_at))
+        force = _ramp(t["accel"], s.accel_deadzone, s.throttle_baseline_force,
+                      s.throttle_max_force, s.throttle_curve, s.throttle_wall_engage_at)
+        if s.enable_speed_throttle and s.speed_throttle_boost > 0 and t["accel"] >= s.accel_deadzone:
+            fade = max(1.0, s.speed_throttle_fade_km)
+            speed = t["speed"]
+            if speed < fade:
+                ratio = speed / fade
+                force = min(255, force + int(s.speed_throttle_boost * (1.0 - ratio)))
+        return rigid(force)
 
 
 # --- Controller -----------------------------------------------------------
@@ -185,8 +222,9 @@ class Controller:
         1. Gear shift thump    - one-shot burst on every shift, brief
         2. Rev limiter buzz    - rpm/max_rpm >= rev_limit_ratio
         3. Wheelspin buzz      - driven wheels slipping (surface-aware)
-        4. Firmware end wall   - hard wall near 100% travel (hysteresis)
-        5. Throttle resistance - default rigid ramp 0..max_force
+        4. Turbo lag           - boost pressure rising, deep rumble
+        5. Firmware end wall   - hard wall near 100% travel (hysteresis)
+        6. Throttle resistance - default rigid ramp 0..max_force
     """
 
     def __init__(self, settings):
@@ -254,11 +292,16 @@ class Controller:
         if spin is not None:
             return spin
 
-        # 5. Firmware end wall - hard wall near 100% travel (latched via hysteresis)
+        # 5. Turbo lag - boost climbing, brief deep rumble
+        turbo = self.anim.turbo_lag(t, s, now)
+        if turbo is not None:
+            return turbo
+
+        # 6. Firmware end wall - hard wall near 100% travel (latched via hysteresis)
         self._r2_in_wall = _wall_state(accel, self._r2_in_wall,
                                        s.throttle_wall_engage_at, s.throttle_wall_release_at)
         if self._r2_in_wall:
             return self.wall
 
-        # 6. Throttle resistance - default rigid ramp
+        # 7. Throttle resistance - default rigid ramp
         return self.anim.throttle_ramp(t, s)
