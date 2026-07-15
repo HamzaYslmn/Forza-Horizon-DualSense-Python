@@ -265,6 +265,19 @@ I have integrated DSX (DualSenseX) support. Due to DSX limitations, you might no
 
 ---
 
+### ✨ New Features: Dynamic Redline Detection & RGB Shift Lights
+
+#### 1. Dynamic Redline Detection
+-   **Problem Solved:** The original rev limiter feedback triggers based on a fixed `rpm / max_rpm` ratio. Since redline RPM varies significantly across different vehicles, this leads to inaccurate feedback timing and requires manual per-car tuning.
+-   **New Approach:** The system initializes with linear interpolation based on `max_rpm`, then continuously reads throttle position and RPM delta from the game's telemetry data to calculate the precise redline zone in real time. Vehicle ID is tracked automatically to detect car swaps and recalibrate instantly.
+
+#### 2. RGB Shift Lights
+-   **Description:** Displays RGB color indicators via the controller touchpad/light bar based on the current RPM relative to the detected redline, simulating real-world racing shift lights.
+-   **Color Logic:** Green (low RPM) → Yellow (mid RPM) → Red (approaching redline) → Flashing (rev limiter hit).
+-   **Hardware & Software Support:** Fully tested with DualSense controllers. Supports both native HID output and DSX mode output. Note that Player LED control is restricted in DSX mode, resulting in slightly different lighting behavior compared to native HID.
+
+---
+
 ## 🙏 Credits
 
 Built by **[HamzaYslmn](https://github.com/HamzaYslmn)**.

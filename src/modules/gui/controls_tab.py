@@ -26,6 +26,12 @@ TRIGGER_CONTROLS = [
         ("enable_idle_buzz",           "Idle buzz"),
         ("enable_throttle_resistance", "Throttle stiffness"),
     ]),
+    ("LED Lighting", [
+        ("enable_lighting",     "LED Lighting"),
+        ("enable_lightbar",     "LightBar"),
+        ("enable_player_led",   "Player LED"),
+        ("enable_mic_led",      "ABS Light"),
+    ]),
 ]
 
 
@@ -47,6 +53,7 @@ class ControlsTab(ctk.CTkFrame):
         grid.pack(fill="both", expand=True)
         grid.grid_columnconfigure(0, weight=1, uniform="cols")
         grid.grid_columnconfigure(1, weight=1, uniform="cols")
+        grid.grid_columnconfigure(2, weight=1, uniform="cols")
         grid.grid_rowconfigure(0, weight=1)
 
         for col, (title, toggles) in enumerate(TRIGGER_CONTROLS):

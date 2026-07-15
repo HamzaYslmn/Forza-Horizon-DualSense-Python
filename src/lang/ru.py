@@ -32,6 +32,10 @@ STRINGS = {
     "Wheelspin buzz": "Вибрация при пробуксовке",
     "Idle buzz": "Вибрация на холостом ходу",
     "Throttle stiffness": "Жёсткость газа",
+    "LED Lighting": "LED-подсветка",
+    "LightBar": "RGB-световая полоса",
+    "Player LED": "LED игрока",
+    "ABS Light": "Индикатор ABS",
 
     # --- вкладка «Настройки» — разделы ---
     "Pedal dead zones": "Мёртвые зоны педалей",
@@ -43,6 +47,7 @@ STRINGS = {
     "Wheelspin buzz": "Вибрация при пробуксовке",
     "Idle buzz": "Вибрация на холостом ходу",
     "Gear shift thump": "Толчок при переключении передачи",
+    "LED Shift Light": "LED-индикация передач",
 
     # --- вкладка «Настройки» — поля ---
     "Gas trigger dead zone": "Мёртвая зона курка газа",
@@ -67,6 +72,14 @@ STRINGS = {
     "Thump speed (Hz)": "Частота толчка (Гц)",
     "Thump strength": "Сила толчка",
     "Thump length (ms)": "Длительность толчка (мс)",
+    "Auto-detect true redline": "Автоопределение отсечки",
+    "Print detection debug info": "Вывод отладочной информации",
+    "Samples required to lock": "Пиков для фиксации",
+    "RPM clustering tolerance": "Допуск группировки RPM",
+    "Green zone threshold": "Порог зелёной зоны",
+    "Orange zone threshold": "Порог оранжевой зоны",
+    "Red zone threshold": "Порог красной зоны",
+    "Flash threshold": "Порог мигания",
 
     # --- вкладка «Настройки» — кнопки / подсказки ---
     "Reset to defaults": "Сбросить по умолчанию",
@@ -83,6 +96,14 @@ STRINGS = {
         "UDP-порт {port} уже занят. Закройте программу, которая его использует, "
         "или измените порт на вкладке «Система»."
     ),
+    "Dynamically detects rev limiter instead of using dashboard max RPM.":
+        "Gösterge panelindeki maksimum RPM yerine algoritma ile devir sınırlayıcıyı algılar.",
+    "Outputs redline detection state changes to the console.":
+        "Kırmızı çizgi algılama durum değişikliklerini konsola yazdırır.",
+    "Number of valid peaks needed to lock the true redline.":
+        "Gerçek kırmızı çizgiyi kilitlemek için gereken geçerli tepe noktası sayısı.",
+    "Max RPM difference to consider peaks as the same redline.":
+        "Tepe noktalarını aynı kırmızı çizgi olarak kabul etmek için maksimum RPM farkı (kümeleme toleransı).",
 
     # --- вкладка «Система» — разделы / поля ---
     "Forza telemetry (applies on next launch)": "Forza-телеметрия (применится при следующем запуске)",

@@ -40,6 +40,9 @@ from modules.dualsense.adaptive_trigger import (
 log = logging.getLogger("fhds.dsx")
 
 TRIGGER_UPDATE = 1
+RGB_UPDATE = 2         # LightBar LED
+MIC_LED_UPDATE = 5  # 新增：Mic LED 的 Type
+PLAYER_LED_UPDATE = 6  # Player LED
 RESET_TO_USER_SETTINGS = 7
 
 TM_VIBRATE = 8         # VibrateTrigger (DSX v2): pure motor buzz, single value 0-255
@@ -50,6 +53,7 @@ CTV_RIGID = 1          # CustomTriggerValueMode Rigid: [start, force, 0..]
 
 T_LEFT = 1
 T_RIGHT = 2
+
 
 _warned: set[int] = set()
 
@@ -112,3 +116,55 @@ def frames_to_packet(left, right):
 
 def reset_packet():
     return {"instructions": [{"type": RESET_TO_USER_SETTINGS, "parameters": [0]}]}
+
+# --- 新增：LightBar 控制 ---
+def lightbar_packet(r: int, g: int, b: int, brightness: int = 255, controller_index: int = 0):
+    """
+    生成 LightBar 颜色数据包。
+    r, g, b: 0-255
+    brightness: 0-255
+    """
+    # 限制数值在 0-255 之间，防止报错
+    r, g, b, brightness = [_u8(v) for v in (r, g, b, brightness)]
+    return {
+        "instructions": [{
+            "type": RGB_UPDATE,
+            "parameters": [controller_index, r, g, b, brightness]
+        }]
+    }
+
+def player_led_packet(layout: int, controller_index: int = 0):
+    """
+    生成 Player LED 数据包。
+    layout: 0(关闭), 1(玩家1), 2(玩家2), 3(玩家3), 4(玩家4), 5(玩家5)
+    """
+    layout = max(0, min(5, int(layout)))
+    return {
+        "instructions": [{
+            "type": PLAYER_LED_UPDATE,
+            "parameters": [controller_index, layout]
+        }]
+    }
+    
+    dsx_layout_value = PLAYER_LED_MAP.get(layout, 0)
+
+    return {
+        "instructions": [{
+            "type": PLAYER_LED_UPDATE,
+            "parameters": [controller_index, dsx_layout_value]
+        }]
+    }
+
+def mic_led_packet(state: int, controller_index: int = 0):
+    """
+    生成 Mic LED 数据包。
+    state: 0 (ON), 2 (OFF)
+    """
+    # 确保传入的值只有 0 或 2
+    state = 0 if state == 0 else 2
+    return {
+        "instructions": [{
+            "type": MIC_LED_UPDATE,
+            "parameters": [controller_index, state]
+        }]
+    }

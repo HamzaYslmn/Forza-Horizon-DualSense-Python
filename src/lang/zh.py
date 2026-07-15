@@ -32,6 +32,10 @@ STRINGS = {
     "Wheelspin buzz": "车轮打滑震动",
     "Idle buzz": "怠速震动",
     "Throttle stiffness": "油门阻力",
+    "LED Lighting": "LED 灯效",
+    "LightBar": "RGB灯带",
+    "Player LED": "玩家 LED",
+    "ABS Light": "ABS 指示灯",
 
     # --- settings tab sections ---
     "Pedal dead zones": "踏板死区",
@@ -43,6 +47,7 @@ STRINGS = {
     "Wheelspin buzz": "车轮打滑震动",
     "Idle buzz": "怠速震动",
     "Gear shift thump": "换挡冲击",
+    "LED Shift Light": "LED 换挡灯", 
 
     # --- settings tab fields ---
     "Gas trigger dead zone": "油门扳机死区",
@@ -59,7 +64,7 @@ STRINGS = {
     "Tire grip sensitivity": "轮胎抓地灵敏度",
     "Rumble speed (Hz)": "震动速度 (Hz)",
     "Rumble strength": "震动强度",
-    "Fire near redline at": "接近红线时触发",
+    "Fire near redline at": "触发震动百分比",
     "Buzz speed (Hz)": "震动速度 (Hz)",
     "Buzz strength": "震动强度",
     "Buzz hold time (ms)": "震动保持时间 (ms)",
@@ -67,6 +72,14 @@ STRINGS = {
     "Thump speed (Hz)": "冲击速度 (Hz)",
     "Thump strength": "冲击强度",
     "Thump length (ms)": "冲击时长 (ms)",
+    "Auto-detect true redline": "自动探测断油转速",
+    "Print detection debug info": "打印探测调试信息",
+    "Samples required to lock": "锁定所需样本数",
+    "RPM clustering tolerance": "RPM 样本容差",
+    "Green zone threshold": "绿区阈值",
+    "Orange zone threshold": "橙区阈值",
+    "Red zone threshold": "红区阈值",
+    "Flash threshold": "闪烁阈值",
 
     # --- settings tab buttons / hints ---
     "Reset to defaults": "恢复默认",
@@ -81,6 +94,14 @@ STRINGS = {
         "host:port 目标，以逗号分隔。默认 127.0.0.1:5301。",
     "UDP port {port} is in use. Close the other listener or change the port in the System tab.":
         "UDP 端口 {port} 已被占用。请关闭其他监听程序，或在系统选项卡中更改端口。",
+    "Dynamically detects rev limiter instead of using dashboard max RPM.": 
+        "算法识别断油转速，而不是使用仪表盘的最大转速。",
+    "Outputs redline detection state changes to the console.": 
+        "在控制台输出红线探测的状态变化信息。",
+    "Number of valid peaks needed to lock the true redline.": 
+        "锁定真实红线所需的有效峰值样本数量。",
+    "Max RPM difference to consider peaks as the same redline.": 
+        "被视为同一红线的最大 RPM 差值（聚类容差）。",
 
     # --- system tab sections / fields ---
     "Forza telemetry (applies on next launch)": "Forza 遥测（下次启动生效）",

@@ -32,6 +32,10 @@ STRINGS = {
     "Wheelspin buzz": "Patinaj titreşimi",
     "Idle buzz": "Rölanti titreşimi",
     "Throttle stiffness": "Gaz sertliği",
+    "LED Lighting": "LED Aydınlatma",
+    "LightBar": "RGB Işık Çubuğu",
+    "Player LED": "Oyuncu LED'i",
+    "ABS Light": "ABS Işığı",
 
     # --- settings tab sections ---
     "Pedal dead zones": "Pedal ölü bölgeleri",
@@ -43,6 +47,7 @@ STRINGS = {
     "Wheelspin buzz": "Patinaj titreşimi",
     "Idle buzz": "Rölanti titreşimi",
     "Gear shift thump": "Vites darbesi",
+    "LED Shift Light": "LED Vites Işığı",
 
     # --- settings tab fields ---
     "Gas trigger dead zone": "Gaz tetiği ölü bölgesi",
@@ -67,6 +72,14 @@ STRINGS = {
     "Thump speed (Hz)": "Darbe hızı (Hz)",
     "Thump strength": "Darbe gücü",
     "Thump length (ms)": "Darbe süresi (ms)",
+    "Auto-detect true redline": "Gerçek devir sınırını otomatik algıla",
+    "Print detection debug info": "Algılama hata ayıklama bilgisini yazdır",
+    "Samples required to lock": "Kilitleme için gereken örnek sayısı",
+    "RPM clustering tolerance": "RPM kümeleme toleransı",
+    "Green zone threshold": "Yeşil bölge eşiği",
+    "Orange zone threshold": "Turuncu bölge eşiği",
+    "Red zone threshold": "Kırmızı bölge eşiği",
+    "Flash threshold": "Flaş eşiği",
 
     # --- settings tab buttons / hints ---
     "Reset to defaults": "Varsayılanlara sıfırla",
@@ -81,6 +94,14 @@ STRINGS = {
         "host:port hedefleri, virgülle ayrılır. Varsayılan 127.0.0.1:5301.",
     "UDP port {port} is in use. Close the other listener or change the port in the System tab.":
         "UDP portu {port} kullanımda. Diğer dinleyiciyi kapatın ya da Sistem sekmesinden portu değiştirin.",
+    "Dynamically detects rev limiter instead of using dashboard max RPM.":
+        "Gösterge panelindeki maksimum RPM yerine algoritma ile devir sınırlayıcıyı algılar.",
+    "Outputs redline detection state changes to the console.":
+        "Kırmızı çizgi algılama durum değişikliklerini konsola yazdırır.",
+    "Number of valid peaks needed to lock the true redline.":
+        "Gerçek kırmızı çizgiyi kilitlemek için gereken geçerli tepe noktası sayısı.",
+    "Max RPM difference to consider peaks as the same redline.":
+        "Tepe noktalarını aynı kırmızı çizgi olarak kabul etmek için maksimum RPM farkı (kümeleme toleransı).",
 
     # --- system tab sections / fields ---
     "Forza telemetry (applies on next launch)": "Forza telemetri (sonraki açılışta uygulanır)",

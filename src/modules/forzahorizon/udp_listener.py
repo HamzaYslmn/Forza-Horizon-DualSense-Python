@@ -7,7 +7,6 @@ to stale telemetry.
 import logging
 import socket
 import struct
-
 from .udp_forward import UDPForwarder
 
 log = logging.getLogger("fhds.udp")
@@ -127,7 +126,7 @@ class UDPListener:
     """
 
     def __init__(self, host: str, port: int, timeout: float = 0.5,
-                 forward_to: str = "", forward_enabled: bool = True):
+                forward_to: str = "", forward_enabled: bool = True):
         self.host = host
         self.port = port
         self.timeout = timeout

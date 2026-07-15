@@ -71,6 +71,17 @@ class DSXClient:
     def set(self, left, right):
         self._send(tm.frames_to_packet(left, right))
 
+    #新增灯控
+    def set_lightbar(self, r: int, g: int, b: int, brightness: int = 255):
+        self._send(tm.lightbar_packet(r, g, b, brightness))
+
+    def set_player_led(self, player_number: int):
+        self._send(tm.player_led_packet(player_number))
+
+    def set_mic_led(self, state: int):
+        self._send(tm.mic_led_packet(state))
+
+
     # DSX owns the device and manages its own reconnect/controller selection, so
     # the rest of the DualSense control surface is a no-op here. Implementing it
     # (rather than omitting it) lets the settings tabs call these unconditionally.

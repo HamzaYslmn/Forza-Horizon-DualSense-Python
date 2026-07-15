@@ -32,6 +32,10 @@ STRINGS = {
     "Wheelspin buzz": "Radschlupf-Surren",
     "Idle buzz": "Leerlauf-Surren",
     "Throttle stiffness": "Gaswiderstand",
+    "LED Lighting": "LED-Beleuchtung",
+    "LightBar": "RGB-Lichtleiste",
+    "Player LED": "Spieler-LED",
+    "ABS Light": "ABS-Anzeige",
 
     # --- settings tab sections ---
     "Pedal dead zones": "Pedal-Totzonen",
@@ -43,6 +47,7 @@ STRINGS = {
     "Wheelspin buzz": "Radschlupf-Surren",
     "Idle buzz": "Leerlauf-Surren",
     "Gear shift thump": "Schaltruck",
+    "LED Shift Light": "LED-Schaltanzeige",
 
     # --- settings tab fields ---
     "Gas trigger dead zone": "Gas-Trigger-Totzone",
@@ -67,6 +72,14 @@ STRINGS = {
     "Thump speed (Hz)": "Ruckfrequenz (Hz)",
     "Thump strength": "Ruckstärke",
     "Thump length (ms)": "Ruckdauer (ms)",
+    "Auto-detect true redline": "Echte Drehzahlgrenze automatisch erkennen",
+    "Print detection debug info": "Debug-Info der Erkennung ausgeben",
+    "Samples required to lock": "Erforderliche Samples zur Arretierung",
+    "RPM clustering tolerance": "RPM-Cluster-Toleranz",
+    "Green zone threshold": "Grüner Bereich Schwellenwert",
+    "Orange zone threshold": "Oranger Bereich Schwellenwert",
+    "Red zone threshold": "Roter Bereich Schwellenwert",
+    "Flash threshold": "Blink-Schwellenwert",
 
     # --- settings tab buttons / hints ---
     "Reset to defaults": "Auf Standard zurücksetzen",
@@ -81,6 +94,14 @@ STRINGS = {
         "host:port-Ziele, durch Komma getrennt. Standard 127.0.0.1:5301.",
     "UDP port {port} is in use. Close the other listener or change the port in the System tab.":
         "UDP-Port {port} ist belegt. Schließen Sie den anderen Listener oder ändern Sie den Port im System-Tab.",
+    "Dynamically detects rev limiter instead of using dashboard max RPM.":
+        "Erkennt den Drehzahlbegrenzer algorithmisch, anstatt die maximale Drehzahl vom Armaturenbrett zu verwenden.",
+    "Outputs redline detection state changes to the console.":
+        "Gibt Zustandsänderungen der Drehzahlgrenzen-Erkennung in der Konsole aus.",
+    "Number of valid peaks needed to lock the true redline.":
+        "Anzahl der gültigen Spitzen, die zum Arretieren der echten Drehzahlgrenze erforderlich sind.",
+    "Max RPM difference to consider peaks as the same redline.":
+        "Maximale RPM-Differenz, um Spitzen als dieselbe Drehzahlgrenze zu betrachten (Cluster-Toleranz).",
 
     # --- system tab sections / fields ---
     "Forza telemetry (applies on next launch)": "Forza-Telemetrie (wird beim nächsten Start übernommen)",

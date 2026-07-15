@@ -1,25 +1,29 @@
 """Per-frame loop: idle/lost handling, write-gate, once-per-second debug log."""
 import logging
 import time
-
 from modules import dualsense, forzahorizon
 from modules.forzahorizon import ProcessWatcher
 
-log = logging.getLogger("fhds")
+from modules.forzahorizon.lighting import LightingController
+from modules.forzahorizon.redline_detector import RedlineDetector
 
+log = logging.getLogger("fhds")
 
 def _max_abs(t, prefix):
     return max(abs(t[f"{prefix}_{wheel}"]) for wheel in ("fl", "fr", "rl", "rr"))
 
-
 def run(ds, listener, s, stop_event=None):
     OFF = dualsense.adaptive_trigger.off()
+    
     controller = forzahorizon.Controller(s)
-    prev = None
+    lighting = LightingController(s)
+
+    redline_detector = RedlineDetector()
+    
+    prev_triggers = None
     last_pkt = time.monotonic()
     last_log = 0.0
     pkt_count = 0
-
     watcher = ProcessWatcher(s.game_process_name_contains, s.game_poll_interval_s)
     dsx_mode = getattr(ds, "is_dsx", False)
 
@@ -27,8 +31,8 @@ def run(ds, listener, s, stop_event=None):
         if stop_event is not None and stop_event.is_set():
             break
         now = time.monotonic()
+        
         if s.exit_on_game_close:
-            # MARK: defensive - never let watcher errors kill the loop silently
             try:
                 if watcher.should_exit():
                     log.info("Game process closed — exiting.")
@@ -37,16 +41,13 @@ def run(ds, listener, s, stop_event=None):
                 log.warning("game-close watcher error: %s", e)
 
         pkt, addr = listener.recv_latest()
-
         if pkt is None:
             idle = now - last_pkt
             if idle > 5.0 and not getattr(listener, "lost", False):
                 log.warning("No UDP packets yet — check Forza Horizon Data Out IP/port and Windows Firewall")
                 listener.lost = True
-            if idle > 1.0 and prev != (OFF, OFF):
-                ds.set(OFF, OFF); prev = (OFF, OFF)
-            # Fallback exit: telemetry was flowing, then stopped for too long
-            # (game killed via Task Manager, or psutil missed the process).
+            if idle > 1.0 and prev_triggers != (OFF, OFF):
+                ds.set(OFF, OFF); prev_triggers = (OFF, OFF)
             if pkt_count > 0 and idle > s.telemetry_lost_exit_s:
                 log.info("Telemetry lost for %.0fs — exiting.", idle)
                 break
@@ -65,19 +66,56 @@ def run(ds, listener, s, stop_event=None):
             log.warning("Bad packet from %s:%d (%d bytes): %s", addr[0], addr[1], len(pkt), e)
             continue
 
-        # MARK: never let a controller logic bug kill the loop - log & skip frame
+        # === Dynamic Redline Detection ===
+        if getattr(s, "enable_dynamic_redline", True):
+            try:
+                # Pass settings object `s` to allow dynamic reading of sample count and tolerance
+                detected_redline = redline_detector.update(t, s) 
+                if detected_redline > 0:
+                    t["max_rpm"] = detected_redline
+            except Exception as e:
+                log.debug("Redline detector failed: %s", e)
+
         try:
             left, right = controller.update(t, s)
         except Exception as e:
             log.warning("controller.update failed: %s", e)
             continue
 
-        if (left, right) != prev:
+        if (left, right) != prev_triggers:
             try:
-                ds.set(left, right); prev = (left, right)
+                ds.set(left, right); prev_triggers = (left, right)
             except Exception as e:
-                # MARK: HID write can fail on disconnect; reconnect logic will retry
                 log.debug("ds.set failed: %s", e)
+
+        if hasattr(ds, "set_lightbar"):
+            try:
+                # 计算 ABS 是否激活（复用 effects.py 中相同的判断条件）
+                abs_active = (
+                    getattr(s, "enable_abs", False)
+                    and t["brake"] >= max(1, getattr(s, "abs_brake_threshold", 0))
+                    and t["speed"] >= getattr(s, "abs_min_speed_kmh", 0)
+                    and (
+                        max(abs(t[f"tire_slip_ratio_{w}"]) for w in ("fl","fr","rl","rr"))
+                            >= getattr(s, "abs_slip_ratio_threshold", 999)
+                        or max(abs(t[f"tire_combined_slip_{w}"]) for w in ("fl","fr","rl","rr"))
+                            >= getattr(s, "abs_combined_slip_threshold", 999)
+                    )
+                )
+                led_result = lighting.update(t, now, dsx_mode=dsx_mode, abs_active=abs_active)
+                if led_result is not None:
+                    (r, g, b), player_layout, mic_state = led_result
+                    
+                    if getattr(s, "enable_lightbar", True):
+                        ds.set_lightbar(r, g, b)
+                        
+                    if hasattr(ds, "set_player_led") and getattr(s, "enable_player_led", True):
+                        ds.set_player_led(player_layout)
+                        
+                    if hasattr(ds, "set_mic_led") and getattr(s, "enable_mic_led", True):
+                        ds.set_mic_led(mic_state)
+            except Exception as e:
+                log.debug("LED update failed: %s", e)
 
         if now - last_log >= 1.0:
             last_log = now

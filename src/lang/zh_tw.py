@@ -32,6 +32,10 @@ STRINGS = {
     "Wheelspin buzz": "輪胎打滑震動",
     "Idle buzz": "怠速震動",
     "Throttle stiffness": "油門阻力",
+    "LED Lighting": "LED 燈效",
+    "LightBar": "燈條",
+    "Player LED": "玩家 LED",
+    "ABS Light": "ABS 指示燈",
 
     # --- settings tab sections ---
     "Pedal dead zones": "踏板死區",
@@ -43,6 +47,7 @@ STRINGS = {
     "Wheelspin buzz": "輪胎打滑震動",
     "Idle buzz": "怠速震動",
     "Gear shift thump": "換檔衝擊",
+    "LED Shift Light": "LED 換檔燈",
 
     # --- settings tab fields ---
     "Gas trigger dead zone": "油門扳機死區",
@@ -67,6 +72,16 @@ STRINGS = {
     "Thump speed (Hz)": "衝擊速度 (Hz)",
     "Thump strength": "衝擊強度",
     "Thump length (ms)": "衝擊時間 (ms)",
+    # === 新增：動態紅線偵測設定 ===
+    "Auto-detect true redline": "自動偵測真實紅線",
+    "Print detection debug info": "列印偵測除錯資訊",
+    "Samples required to lock": "鎖定所需樣本數",
+    "RPM clustering tolerance": "RPM 聚類容差",
+    # === 新增：LED 換檔燈設定 ===
+    "Green zone threshold": "綠區閾值",
+    "Orange zone threshold": "橙區閾值",
+    "Red zone threshold": "紅區閾值",
+    "Flash threshold": "閃爍閾值",
 
     # --- settings tab buttons / hints ---
     "Reset to defaults": "重設為預設值",
@@ -81,6 +96,15 @@ STRINGS = {
         "host:port 目標，以逗號分隔。預設 127.0.0.1:5301。",
     "UDP port {port} is in use. Close the other listener or change the port in the System tab.":
         "UDP 連接埠 {port} 已被使用。請關閉其他監聽程式，或到系統分頁更改連接埠。",
+    # === 新增：設定項的提示文本 (Tooltips) ===
+    "Dynamically detects rev limiter instead of using dashboard max RPM.": 
+        "動態偵測斷油轉速，而不是使用儀表板上的最大轉速。",
+    "Outputs redline detection state changes to the console.": 
+        "在主控台輸出紅線偵測的狀態變化資訊。",
+    "Number of valid peaks needed to lock the true redline.": 
+        "鎖定真實紅線所需的有效峰值樣本數量。",
+    "Max RPM difference to consider peaks as the same redline.": 
+        "被視為同一紅線的最大 RPM 差值（聚類容差）。",
 
     # --- system tab sections / fields ---
     "Forza telemetry (applies on next launch)": "Forza 遙測（下次啟動生效）",

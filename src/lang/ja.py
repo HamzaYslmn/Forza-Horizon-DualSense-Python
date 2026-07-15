@@ -32,6 +32,10 @@ STRINGS = {
     "Wheelspin buzz": "ホイールスピン振動",
     "Idle buzz": "アイドリング振動",
     "Throttle stiffness": "アクセルの硬さ",
+    "LED Lighting": "LED照明",
+    "LightBar": "RGBライトバー",
+    "Player LED": "プレイヤーLED",
+    "ABS Light": "ABSインジケーター",
 
     # --- settings tab sections ---
     "Pedal dead zones": "ペダルのデッドゾーン",
@@ -43,6 +47,7 @@ STRINGS = {
     "Wheelspin buzz": "ホイールスピン振動",
     "Idle buzz": "アイドリング振動",
     "Gear shift thump": "シフトショック",
+    "LED Shift Light": "LEDシフトライト",
 
     # --- settings tab fields ---
     "Gas trigger dead zone": "アクセルトリガーのデッドゾーン",
@@ -67,6 +72,14 @@ STRINGS = {
     "Thump speed (Hz)": "ショックの速さ (Hz)",
     "Thump strength": "ショックの強さ",
     "Thump length (ms)": "ショックの長さ (ms)",
+    "Auto-detect true redline": "本当のレッドラインを自動検出",
+    "Print detection debug info": "検出デバッグ情報を出力",
+    "Samples required to lock": "ロックに必要なサンプル数",
+    "RPM clustering tolerance": "RPMクラスタリング許容差",
+    "Green zone threshold": "グリーンゾーン閾値",
+    "Orange zone threshold": "オレンジゾーン閾値",
+    "Red zone threshold": "レッドゾーン閾値",
+    "Flash threshold": "フラッシュ閾値",
 
     # --- settings tab buttons / hints ---
     "Reset to defaults": "デフォルトに戻す",
@@ -136,6 +149,14 @@ STRINGS = {
     "File: {path}": "ファイル: {path}",
     "Note: the [b]Default[/] profile is reset to built-in values every time the app launches so new features and tuning come through. System settings (System tab) are preserved. To keep your own tuning across launches, save it as a named profile here.":
         "注意: [b]Default[/] プロファイルは、新機能や調整を反映するためアプリ起動のたびに組み込み値へリセットされます。システム設定（システムタブ）は保持されます。独自の調整を起動間で保持するには、ここで名前付きプロファイルとして保存してください。",
+    "Dynamically detects rev limiter instead of using dashboard max RPM.":
+        "ダッシュボードの最大RPMを使用する代わりに、アルゴリズムでレブリミッターを識別します。",
+    "Outputs redline detection state changes to the console.":
+        "レッドライン検出の状態変化をコンソールに出力します。",
+    "Number of valid peaks needed to lock the true redline.":
+        "真のレッドラインをロックするために必要な有効なピークサンプル数。",
+    "Max RPM difference to consider peaks as the same redline.":
+        "ピークを同一のレッドラインとみなすための最大RPM差（クラスタリング許容差）。",
 
     # --- logs tab ---
     "level": "レベル",

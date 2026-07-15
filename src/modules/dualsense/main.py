@@ -24,9 +24,18 @@ PRODUCT_IDS = (0x0CE6, 0x0DF2)  # DualSense, DualSense Edge
 TRIG_FLAGS = 0x04 | 0x08
 
 # MARK: Layout maps — byte offsets per transport
-# vf1 = valid_flag1, psav = power_save_control
-USB = {"rid": 0x02, "flags": 1, "vf1": 2, "psav": 10, "r": 11, "l": 22, "size": 64, "bt": False}
-BT  = {"rid": 0x31, "flags": 2, "vf1": 3, "psav": 11, "r": 12, "l": 23, "size": 78, "bt": True}
+# rid = report id, flags = trigger flags, vf1/vf2 = valid flags
+# r/l = right/left trigger offset, mic = mic led, pled = player led, rgb = lightbar
+USB = {
+    "rid": 0x02, "flags": 1, "vf1": 2, "vf2": 3, "psav": 10, 
+    "r": 11, "l": 22, "size": 64, "bt": False,
+    "mic": 9, "pled": 44, "rgb": 45
+}
+BT  = {
+    "rid": 0x31, "flags": 2, "vf1": 3, "vf2": 4, "psav": 11, 
+    "r": 12, "l": 23, "size": 78, "bt": True,
+    "mic": 10, "pled": 45, "rgb": 46
+}
 
 # Precomputed CRC of the BT report-header byte 0xA2. zlib.crc32(data, value)
 # resumes from `value`, so this lets us CRC straight off the buffer without
@@ -190,6 +199,10 @@ class DualSense:
         self._lock = threading.Lock()
         self._left = self._right = off()
         self._dirty = False
+        self._rgb = (0, 0, 0)       # Lightbar RGB
+        self._pled = 0              # Player LED bitmask
+        self._mic = 0               # Mic LED state
+        self._lighting_dirty = False # 灯光数据是否需要更新
         self._running = False
         self._thread = None
         # Signalled by set() and close() so the I/O thread sleeps until a new
@@ -248,6 +261,33 @@ class DualSense:
     def set(self, left, right):
         with self._lock:
             self._left, self._right, self._dirty = left, right, True
+        self._wake.set()
+
+    def set_lightbar(self, r: int, g: int, b: int):
+        """设置 Lightbar RGB (0-255)"""
+        with self._lock:
+            self._rgb = (max(0, min(255, r)), max(0, min(255, g)), max(0, min(255, b)))
+            self._lighting_dirty = True
+        self._wake.set()
+
+    def set_player_led(self, mask: int):
+        """
+        设置 Player LED (HID 模式)
+        直接接收 5-bit bitmask (0-31)，Bit0=最右灯, Bit4=最左灯
+        """
+        mask = max(0, min(31, int(mask)))
+        
+        with self._lock:
+            self._pled = mask
+            self._lighting_dirty = True
+        self._wake.set()
+
+    def set_mic_led(self, state: int):
+        """设置 Mic LED (0: ON, 2: OFF) -> 转换为原生协议 (1: ON, 0: OFF)"""
+        native_state = 1 if state == 0 else 0
+        with self._lock:
+            self._mic = native_state
+            self._lighting_dirty = True
         self._wake.set()
 
     def set_reconnect_enabled(self, enabled: bool) -> None:
@@ -430,8 +470,12 @@ class DualSense:
             # --- Write the latest queued frame, if any ---
             with self._lock:
                 dirty, left, right = self._dirty, self._left, self._right
+                lighting_dirty = self._lighting_dirty
                 self._dirty = False
-            if dirty:
+                # 注意：这里不立即清除 lighting_dirty，交给 _build 去清除
+                
+            # 只要扳机或灯光有更新，就发送报告
+            if dirty or lighting_dirty:
                 try:
                     n = self.dev.write(self._build(left, right))
                 except Exception as e:
@@ -463,20 +507,32 @@ class DualSense:
     def _build(self, left, right):
         L = self.lay
         buf = self._new_report()
+        
         buf[L["flags"]] = TRIG_FLAGS
         for pos, (mode, params) in ((L["r"], right), (L["l"], left)):
             buf[pos] = mode
-            # params elements are already clamped to 0-255 by triggers.py;
-            # bytearray slice-assignment accepts a tuple of ints directly.
             buf[pos + 1:pos + 1 + len(params)] = params[:10]
+            
+        buf[L["vf1"]] |= 0x15  # 0x01 (Mic) | 0x04 (Lightbar) | 0x10 (Player LED)
+        buf[L["vf2"]] |= 0x04  # 0x04 (Lightbar RGB)
+        
+        buf[L["mic"]] = self._mic
+        buf[L["pled"]] = self._pled
+        
+        r, g, b = self._rgb
+        buf[L["rgb"]] = r
+        buf[L["rgb"] + 1] = g
+        buf[L["rgb"] + 2] = b
+        
+        self._lighting_dirty = False
         self._finalize_bt_crc(buf)
-        return buf  # hidapi accepts bytearray — skip the bytes() copy.
+        return buf
 
     def _build_power_saver(self):
         """Build a minimal HID report that enables the power-save flag only."""
         L = self.lay
         buf = self._new_report()
-        buf[L["vf1"]] |= 0x02          # bit 1 = POWER_SAVE_CONTROL enable
-        buf[L["psav"]] |= 0x10         # bit 4 = hardware power save
+        buf[L["vf1"]] |= 0x14 
+        buf[L["vf2"]] |= 0x02  
         self._finalize_bt_crc(buf)
         return buf
